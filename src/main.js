@@ -148,6 +148,7 @@ const WAYPOINTS = [
   { id: 'stats',      z: 30,  x: -3,  y:  0,  rx:  0.008, ry: -0.030, color: 0x22c55e    },
   { id: 'skills',     z: 23,  x:  4,  y:  2,  rx:  0.012, ry:  0.045, color: 0xa78bfa    },
   { id: 'education',  z: 17,  x: -2,  y: -1,  rx: -0.010, ry: -0.020, color: 0x00d4ff    },
+  { id: 'about',      z: 14,  x:  3,  y:  1,  rx:  0.010, ry:  0.030, color: 0x22c55e    },
   { id: 'contact',    z: 12,  x:  0,  y:  0,  rx:  0.000, ry:  0.000, color: null        },
 ];
 
