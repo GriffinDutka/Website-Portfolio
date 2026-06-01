@@ -1,0 +1,9 @@
+# OS
+.DS_Store
+
+# Local dev tooling (Claude Code preview launch config — not needed in production)
+.claude/
+
+# Editor
+.vscode/
+*.log
