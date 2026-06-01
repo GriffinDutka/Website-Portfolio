@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { prepareSkillsGraph, startSkillsDraw } from './skills.js';
+import { prepareSkillsGraph, startSkillsDraw } from './skills.js?v=2';
 import { initHeroParticles } from './hero.js';
 import { initSceneObjects, tickSceneObjects } from './scene-objects.js';
 import { initParallax, tickParallax, initGlitchLabels, initHeroNameGlitch, initCursor, initScrollProgress, initHeroTerminal } from './effects.js';
@@ -7,6 +7,10 @@ import { initParallax, tickParallax, initGlitchLabels, initHeroNameGlitch, initC
 const gsap         = window.gsap;
 const ScrollTrigger = window.ScrollTrigger;
 gsap.registerPlugin(ScrollTrigger);
+
+// Phones/tablets get a lighter scene: fewer particles, lower pixel ratio, no
+// antialiasing, fewer data streams. Big battery/heat win, visually near-identical.
+const IS_MOBILE = window.matchMedia('(max-width: 768px)').matches;
 
 // ── LOADER ───────────────────────────────────────────────────────────────────
 const loaderEl  = document.getElementById('loader');
@@ -34,8 +38,8 @@ const loadInterval = setInterval(() => {
 
 // ── THREE.JS SCENE ───────────────────────────────────────────────────────────
 const canvas   = document.getElementById('bg');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: !IS_MOBILE, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, IS_MOBILE ? 1.5 : 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 const scene  = new THREE.Scene();
@@ -43,7 +47,7 @@ const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerH
 camera.position.set(0, 0, 50);
 
 // ── PARTICLE FIELD ───────────────────────────────────────────────────────────
-const PARTICLE_COUNT = 2800;
+const PARTICLE_COUNT = IS_MOBILE ? 1000 : 2800;
 const positions  = new Float32Array(PARTICLE_COUNT * 3);
 const colors     = new Float32Array(PARTICLE_COUNT * 3);
 const sizes      = new Float32Array(PARTICLE_COUNT);
@@ -112,7 +116,7 @@ scene.add(particlesMesh);
 
 // ── DATA STREAMS ─────────────────────────────────────────────────────────────
 const streams = [];
-for (let s = 0; s < 18; s++) {
+for (let s = 0; s < (IS_MOBILE ? 8 : 18); s++) {
   const pts = [];
   const x = (Math.random() - 0.5) * 180;
   const y = (Math.random() - 0.5) * 180;

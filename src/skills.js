@@ -169,7 +169,7 @@ function _buildSVG() {
     g.addEventListener('mouseleave', () => {
       if (activeNode !== n) { _hideTooltip(); _setActive(i, false); _highlightEdges(i, false); }
     });
-    g.addEventListener('click', () => {
+    g.addEventListener('click', e => {
       if (activeNode === n) {
         activeNode = null;
         _hideTooltip();
@@ -184,6 +184,9 @@ function _buildSVG() {
         activeNode = n;
         _setActive(i, true);
         _highlightEdges(i, true);
+        // Show the description on tap/click too — without this, touch devices
+        // (no hover) highlight the node but never reveal its context.
+        _showTooltip(n, e.clientX, e.clientY);
       }
     });
 
