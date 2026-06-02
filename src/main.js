@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { prepareSkillsGraph, startSkillsDraw } from './skills.js?v=2';
 import { initHeroParticles } from './hero.js';
 import { initSceneObjects, tickSceneObjects } from './scene-objects.js';
-import { initParallax, tickParallax, initGlitchLabels, initHeroNameGlitch, initCursor, initScrollProgress, initHeroTerminal } from './effects.js';
+import { initParallax, tickParallax, initGlitchLabels, initHeroNameGlitch, initCursor, initScrollProgress, initHeroTerminal } from './effects.js?v=2';
 
 const gsap         = window.gsap;
 const ScrollTrigger = window.ScrollTrigger;

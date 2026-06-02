@@ -102,9 +102,11 @@ function makeOverlay(parent, originalHTML, color) {
   return d;
 }
 
+let _glitchRunning = false;
 function runTVGlitch() {
   const el = document.querySelector('.hero-name');
-  if (!el) return;
+  if (!el || _glitchRunning) return;   // guard: never overlap cycles
+  _glitchRunning = true;
 
   const originalHTML = el.innerHTML; // 'Griffin<br>Dutka'
 
@@ -143,6 +145,7 @@ function runTVGlitch() {
     onComplete: () => {
       red.remove(); blue.remove(); scan.remove(); bar.remove();
       gsap.set(el, { clearProps: 'x,skewX,filter' });
+      _glitchRunning = false;
     },
   });
 
@@ -175,9 +178,23 @@ function runTVGlitch() {
 }
 
 export function initHeroNameGlitch() {
-  window.addEventListener('scroll', () => {
-    setTimeout(runTVGlitch, 40);
-  }, { once: true, passive: true });
+  // Track whether the hero is on screen so we don't glitch an off-screen name.
+  const hero = document.getElementById('hero');
+  let heroVisible = true;
+  if (hero && 'IntersectionObserver' in window) {
+    new IntersectionObserver(
+      entries => { heroVisible = entries[0].isIntersecting; },
+      { threshold: 0.25 }
+    ).observe(hero);
+  }
+
+  // Keep the original "glitch on first scroll" beat...
+  window.addEventListener('scroll', () => setTimeout(runTVGlitch, 40), { once: true, passive: true });
+
+  // ...then re-fire every ~5s while the hero is visible and the tab is focused.
+  setInterval(() => {
+    if (heroVisible && document.visibilityState === 'visible') runTVGlitch();
+  }, 5000);
 }
 
 // ── 4. CUSTOM CURSOR (pure rAF — no GSAP, eliminates transform conflicts) ────
