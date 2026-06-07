@@ -8,6 +8,13 @@ const gsap         = window.gsap;
 const ScrollTrigger = window.ScrollTrigger;
 gsap.registerPlugin(ScrollTrigger);
 
+// ── FORCE SCROLL TO TOP ON (RE)LOAD ───────────────────────────────────────────
+// Stop the browser from restoring the previous scroll position so every load
+// starts at the hero and the intro plays from the top.
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.scrollTo(0, 0);
+window.addEventListener('load', () => window.scrollTo(0, 0));
+
 // Phones/tablets get a lighter scene: fewer particles, lower pixel ratio, no
 // antialiasing, fewer data streams. Big battery/heat win, visually near-identical.
 const IS_MOBILE = window.matchMedia('(max-width: 768px)').matches;
