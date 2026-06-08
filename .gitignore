@@ -1,6 +1,9 @@
 # OS
 .DS_Store
 
+# Resume backups (local safety copies)
+griffin-dutka-resume.backup-*.pdf
+
 # Local dev tooling (Claude Code preview launch config — not needed in production)
 .claude/
 
