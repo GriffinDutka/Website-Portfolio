@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Griffin Dutka — Résumé (Dark)</title>
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#101620;
+    --line:#1e2733;
+    --ink:#cdd6e0;
+    --dim:#8a96a4;
+    --accent:#3ddc97;     /* terminal green */
+    --accent2:#38bdf8;    /* cyan */
+    --white:#f2f6fa;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  /* Screen viewing only — print/PDF keeps exact letter sizing */
+  @media screen { html { zoom: 2; } }
+  @page{size:letter;margin:0;}
+  html,body{background:var(--bg);}
+  body{
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+    color:var(--ink);font-size:9.7px;line-height:1.45;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;}
+  .page{padding:0.46in 0.5in 0.4in;min-height:11in;}
+
+  /* header band */
+  .hero{border-bottom:1px solid var(--line);padding-bottom:11px;margin-bottom:12px;position:relative;}
+  .tag{font-family:ui-monospace,Menlo,monospace;font-size:8px;letter-spacing:2px;color:var(--accent);}
+  .name{font-size:30px;font-weight:800;letter-spacing:-0.5px;color:var(--white);line-height:1.02;margin:3px 0 2px;}
+  .role{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent2);}
+  .contact{margin-top:7px;font-family:ui-monospace,Menlo,monospace;font-size:8.4px;color:var(--dim);}
+  .contact a{color:var(--dim);text-decoration:none;}
+  .contact .s{color:var(--accent);margin:0 6px;}
+
+  .label{font-family:ui-monospace,Menlo,monospace;font-size:9px;font-weight:700;letter-spacing:1px;color:var(--accent);margin:14px 0 6px;}
+  .label .br{color:var(--dim);}
+
+  .summary{color:var(--ink);font-size:9.8px;line-height:1.5;}
+  .hl{color:var(--accent);font-weight:700;}
+
+  /* metric strip */
+  .metrics{display:flex;gap:8px;margin:11px 0 2px;}
+  .metric{flex:1;background:var(--panel);border:1px solid var(--line);border-left:2px solid var(--accent);border-radius:4px;padding:6px 8px;}
+  .metric .n{font-size:14px;font-weight:800;color:var(--white);font-family:ui-monospace,Menlo,monospace;line-height:1;}
+  .metric .l{font-size:7.4px;color:var(--dim);margin-top:3px;line-height:1.25;}
+
+  .job{margin-top:9px;break-inside:avoid;}
+  .job-head{display:flex;justify-content:space-between;align-items:baseline;}
+  .job-t{font-weight:800;font-size:11px;color:var(--white);}
+  .job-d{font-family:ui-monospace,Menlo,monospace;font-size:8.2px;color:var(--dim);}
+  .job-co{font-size:9px;color:var(--accent2);font-weight:700;margin:1px 0 4px;}
+
+  ul{list-style:none;}
+  li{position:relative;padding-left:13px;margin:3px 0;break-inside:avoid;color:var(--ink);}
+  li::before{content:"▸";position:absolute;left:0;top:-0.5px;color:var(--accent);font-size:8px;}
+  ul.sub{margin:2px 0 2px 13px;}
+  ul.sub li::before{content:"·";color:var(--accent2);font-size:13px;top:-2px;}
+  strong{color:var(--white);font-weight:800;}
+
+  /* two-up lower section */
+  .cols{display:flex;gap:20px;margin-top:4px;break-inside:avoid;}
+  .col{flex:1;}
+  .skill-g{margin-bottom:6px;}
+  .skill-l{font-family:ui-monospace,Menlo,monospace;font-size:8.2px;color:var(--accent);font-weight:700;}
+  .skill-i{font-size:8.6px;color:var(--dim);}
+  .edu{margin-bottom:7px;}
+  .edu-d{font-weight:700;font-size:9px;color:var(--white);}
+  .edu-s{font-size:8.6px;color:var(--accent2);}
+  .edu-m{font-size:8px;color:var(--dim);}
+
+  .chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;}
+  .chip{font-family:ui-monospace,Menlo,monospace;border:1px solid var(--line);background:var(--panel);color:var(--accent);font-size:7.4px;padding:1.5px 5px;border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <div class="tag mono">OPS · SEC · AI</div>
+    <div class="name">Griffin Dutka</div>
+    <div class="role">Security Operations Engineer</div>
+    <div class="contact mono">
+      griffindutka0@gmail.com<span class="s">/</span>linkedin.com/in/griffindutka<span class="s">/</span>grifftty.com<span class="s">/</span>Chicago, IL
+    </div>
+  </header>
+
+  <div class="label mono"><span class="br">//</span> SUMMARY</div>
+  <p class="summary">Security Operations Engineer with deep expertise in DLP, <span class="hl">AI-driven security automation</span>, SOC agentics, endpoint security, and incident response across large-scale enterprise environments. Experienced operating across on-prem and cloud/SaaS platforms, with a track record of designing and implementing security programs that reduce risk, improve response times, and scale across the organization.</p>
+
+  <div class="metrics">
+    <div class="metric"><div class="n">1,500+</div><div class="l">Terminations secured · zero unauthorized access</div></div>
+    <div class="metric"><div class="n">300+</div><div class="l">AI DLP reports · &lt;10 min each</div></div>
+    <div class="metric"><div class="n">80K+ GB</div><div class="l">Stale data surfaced · 4,500+ devices</div></div>
+    <div class="metric"><div class="n">150–200+</div><div class="l">Analyst hrs recovered / month</div></div>
+  </div>
+
+  <div class="label mono"><span class="br">//</span> EXPERIENCE</div>
+
+  <div class="job">
+    <div class="job-head"><span class="job-t">Security Operations Engineer</span><span class="job-d mono">July 2025 – Present</span></div>
+    <div class="job-co">Beyond Finance · Chicago, IL (Remote)</div>
+    <ul>
+      <li>Leads daily DLP incident response as primary analyst — coordinates 25+ daily analyst triage reviews across CyberHaven, Teramind, Datadog, Google Admin, Absolute, CrowdStrike, CyberArk, and Abnormal; direct escalation contact for HR, Legal, and executive leadership</li>
+      <li>Engineered an agentic SOC/DLP pipeline — AI agents that triage alerts, review user activity, correlate logs, and draft executive-ready incident reports — recovering <strong>150–200+ analyst hours per month</strong></li>
+      <li>Engineered DLP-specific prompts for real-time user-activity queries and automated log analysis using browser-based investigation ./skill workflows that self-improve from each output and compact context every 5th cycle for sustained accuracy</li>
+      <li>Built the <strong>Analyst Action Hub</strong> in Claude Cowork — a daily dashboard the team works from to track review tasks, pull ticket requests, and log completions; serves as a live monitor for the entire DLP program, providing visibility to VPs and executives</li>
+      <li>Eliminated unauthorized post-termination device access in a cloud-based environment across <strong>1,500+ terminations</strong> by architecting a Dead Man Switch (DMS) — a multi-layer offboarding lockdown system
+        <ul class="sub">
+          <li><strong>Layer 1:</strong> Absolute OS freeze — auto-bricks offline devices after 30 days via embedded offline timer; no internet required</li>
+          <li><strong>Layer 2:</strong> Cached credential clearing via NinjaOne and JumpCloud MDM heartbeat scripts on devices inactive 3–5 days depending on job title</li>
+          <li><strong>Layer 3:</strong> 20+ blocking controls and monitors across CyberHaven, Teramind, and Datadog to detect any post-termination activity on high-turnover users</li>
+          <li>Automated 7-day and 24-hour device warning emails; ServiceNow unlock form for IT false-positive recovery</li>
+        </ul>
+      </li>
+      <li>Authored official P0, P1, and P2 incident playbooks now in active use across the security team — covering identification, war room mobilization, containment, scoping, reporting, and remediation</li>
+      <li>Standardized security request intake by replacing ad hoc Slack channels with a ServiceNow-based workflow enforcing scope selection, business justification, and SLA accountability</li>
+    </ul>
+  </div>
+
+  <div class="job">
+    <div class="job-head"><span class="job-t">Cybersecurity Analyst</span><span class="job-d mono">2023 – 2025</span></div>
+    <div class="job-co">Exelon Corporation · Chicago, IL</div>
+    <ul>
+      <li>Investigated security incidents using Splunk, CyberArk, and Carbon Black for threat detection, log analysis, and incident response; documented and escalated findings to senior analysts and stakeholders</li>
+      <li>Assisted in deploying security tooling to <strong>1,500+ endpoints</strong> across Linux RHEL 7/8, Windows Server 2016–22, and EMS environments — including on-prem deployments of CyberArk, Splunk, Carbon Black, and Aruba ClearPass</li>
+      <li>Developed Splunk SPL queries and dashboards for real-time endpoint activity and network traffic monitoring; optimized Carbon Black endpoint detection policies to reduce false positives</li>
+      <li>Managed privileged access via CyberArk and identity-based network access control via Aruba ClearPass; ensured compliance with NERC CIP and additional regulatory frameworks</li>
+      <li>Authored SOPs, incident handling workflows, and troubleshooting guides for cross-team knowledge sharing and audit readiness</li>
+    </ul>
+  </div>
+
+  <div class="label mono"><span class="br">//</span> TECHNICAL SKILLS</div>
+  <div class="cols">
+    <div class="col">
+      <div class="skill-g"><div class="skill-l">DLP &amp; Monitoring</div><div class="skill-i">CyberHaven · Teramind · Datadog · Google Admin · CrowdStrike · Abnormal · CyberArk</div></div>
+      <div class="skill-g"><div class="skill-l">Endpoint &amp; MDM</div><div class="skill-i">Absolute · JumpCloud · NinjaOne · ServiceNow · Carbon Black</div></div>
+      <div class="skill-g"><div class="skill-l">SIEM &amp; Detection</div><div class="skill-i">Splunk (SPL) · Datadog · CyberArk</div></div>
+      <div class="skill-g"><div class="skill-l">Automation &amp; Cloud</div><div class="skill-i">Torq · Tray.io · AWS S3 · PowerShell · LaunchD · Task Scheduler · Storage Sense</div></div>
+    </div>
+    <div class="col">
+      <div class="skill-g"><div class="skill-l">AI &amp; Prompt Engineering</div><div class="skill-i">Claude · Claude Cowork · Gemini · Google Drive AI Projects · Ask Gemini</div></div>
+      <div class="skill-g"><div class="skill-l">Data &amp; E-Discovery</div><div class="skill-i">Google Vault · Looker · Logikull · Absolute EDD</div></div>
+      <div class="skill-g"><div class="skill-l">Network &amp; Identity</div><div class="skill-i">Aruba ClearPass · Cisco · Checkpoint</div></div>
+      <div class="skill-g"><div class="skill-l">Compliance</div>
+        <div class="chips">
+          <span class="chip">NIST CSF</span><span class="chip">ISO 27001</span><span class="chip">NERC CIP</span><span class="chip">GDPR</span><span class="chip">PCI-DSS</span><span class="chip">HIPAA</span><span class="chip">SOX</span><span class="chip">SOC 2</span><span class="chip">FISMA</span><span class="chip">OWASP</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="label mono"><span class="br">//</span> EDUCATION</div>
+  <div class="cols">
+    <div class="col"><div class="edu"><div class="edu-d">B.S. Cybersecurity</div><div class="edu-s">Bellevue University</div><div class="edu-m">GPA 4.0 · 2023 · NSA-Recognized</div></div></div>
+    <div class="col"><div class="edu"><div class="edu-d">A.S. Cybersecurity</div><div class="edu-s">Joliet Junior College</div><div class="edu-m">2021</div></div></div>
+    <div class="col"><div class="edu"><div class="edu-d">Cert. of Achievement</div><div class="edu-s">Joliet Junior College</div><div class="edu-m">2021 · valid through 2033</div></div></div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -53,10 +53,12 @@ function fadeOut(mesh, duration = 0.8) {
   gsap.to(mesh.scale, { x: 0.5, y: 0.5, z: 0.5, duration, ease: 'power2.in' });
 }
 
+const _sections = [];
+
 function sectionTrigger(id, onEnter, onLeave) {
   const el = document.getElementById(id);
   if (!el) return;
-  ST.create({
+  const st = ST.create({
     trigger: el,
     start: 'top 70%',
     end:   'bottom 20%',
@@ -65,7 +67,18 @@ function sectionTrigger(id, onEnter, onLeave) {
     onEnterBack: onEnter,
     onLeave,
   });
+  _sections.push({ st, onLeave });
 }
+
+// Self-heal: instant scroll jumps (nav dots, anchor links) and ScrollTrigger
+// refreshes can strand a fade-in/fade-out race mid-flight, leaving accent
+// objects visible in the wrong section. Periodically force objects of any
+// inactive section back out. (try/catch: onLeave closures assume build() ran.)
+setInterval(() => {
+  _sections.forEach(({ st, onLeave }) => {
+    if (!st.isActive) { try { onLeave(); } catch (_) { /* not built yet */ } }
+  });
+}, 2500);
 
 // ── 1. PERSISTENT GLOBE ────────────────────────────────────────────────────────
 function makePersistentGlobe() {
@@ -194,11 +207,11 @@ function wireExperienceObjects() {
     () => {
       build();
       rings.forEach((r, i) => {
-        gsap.to(r.material, { opacity: r._targetOpacity, duration: 1.2 + i * 0.3, ease: 'power2.out' });
+        gsap.to(r.material, { opacity: r._targetOpacity, duration: 1.2 + i * 0.3, ease: 'power2.out', overwrite: true });
         gsap.fromTo(r.scale, { x: 0.2, y: 0.2, z: 0.2 }, { x: 1, y: 1, z: 1, duration: 1.4 + i * 0.2, ease: 'back.out(1.2)' });
       });
     },
-    () => rings.forEach(r => gsap.to(r.material, { opacity: 0, duration: 0.7, ease: 'power2.in' }))
+    () => rings.forEach(r => gsap.to(r.material, { opacity: 0, duration: 0.7, ease: 'power2.in', overwrite: true }))
   );
 }
 
@@ -243,10 +256,10 @@ function wireStatsObjects() {
     () => {
       build();
       bars.forEach((b, i) => {
-        gsap.to(b.material, { opacity: 0.35, duration: 0.8 + i * 0.05, ease: 'power2.out', delay: i * 0.04 });
+        gsap.to(b.material, { opacity: 0.35, duration: 0.8 + i * 0.05, ease: 'power2.out', delay: i * 0.04, overwrite: true });
       });
     },
-    () => bars.forEach(b => gsap.to(b.material, { opacity: 0, duration: 0.5 }))
+    () => bars.forEach(b => gsap.to(b.material, { opacity: 0, duration: 0.5, overwrite: true }))
   );
 }
 
@@ -289,13 +302,13 @@ function wireSkillsObjects() {
     () => {
       build();
       fadeIn(dodec, 1.4);
-      gsap.to(orbit1.material, { opacity: orbit1._targetOpacity, duration: 1.8, ease: 'power2.out' });
-      gsap.to(orbit2.material, { opacity: orbit2._targetOpacity, duration: 2.2, ease: 'power2.out' });
+      gsap.to(orbit1.material, { opacity: orbit1._targetOpacity, duration: 1.8, ease: 'power2.out', overwrite: true });
+      gsap.to(orbit2.material, { opacity: orbit2._targetOpacity, duration: 2.2, ease: 'power2.out', overwrite: true });
     },
     () => {
       fadeOut(dodec);
-      gsap.to(orbit1.material, { opacity: 0, duration: 0.7 });
-      gsap.to(orbit2.material, { opacity: 0, duration: 0.7 });
+      gsap.to(orbit1.material, { opacity: 0, duration: 0.7, overwrite: true });
+      gsap.to(orbit2.material, { opacity: 0, duration: 0.7, overwrite: true });
     }
   );
 }
@@ -338,11 +351,11 @@ function wireEducationObjects() {
     () => {
       build();
       fadeIn(tetra, 1.2);
-      gsap.to(ring.material, { opacity: ring._targetOpacity, duration: 1.6 });
+      gsap.to(ring.material, { opacity: ring._targetOpacity, duration: 1.6, overwrite: true });
     },
     () => {
       fadeOut(tetra);
-      gsap.to(ring.material, { opacity: 0, duration: 0.6 });
+      gsap.to(ring.material, { opacity: 0, duration: 0.6, overwrite: true });
     }
   );
 }
@@ -362,6 +375,7 @@ function wireContactObjects() {
       const ring = new THREE.Mesh(geo, mat);
       ring._targetOpacity = 0.25 - i * 0.05;
       ring._phase         = i * 0.6;
+      ring._fade          = 0;   // tween target — tick owns material.opacity
       ring.position.set(0, 0, -15);
       ring.rotation.x     = -Math.PI / 6;
       _scene.add(ring);
@@ -371,7 +385,7 @@ function wireContactObjects() {
         mesh: ring,
         tick: (t) => {
           ring.scale.setScalar(1 + Math.sin(t * 0.5 + ring._phase) * 0.06);
-          ring.material.opacity = ring._targetOpacity * (0.7 + 0.3 * Math.sin(t * 0.8 + ring._phase));
+          ring.material.opacity = ring._fade * ring._targetOpacity * (0.7 + 0.3 * Math.sin(t * 0.8 + ring._phase));
         },
       });
     });
@@ -380,11 +394,13 @@ function wireContactObjects() {
   sectionTrigger('contact',
     () => {
       build();
-      rings.forEach((r, i) =>
-        gsap.to(r.material, { opacity: r._targetOpacity, duration: 1 + i * 0.3, delay: i * 0.15, ease: 'power2.out' })
-      );
+      rings.forEach((r, i) => {
+        // Seed opacity above the tick-skip threshold so the fade can restart
+        r.material.opacity = Math.max(r.material.opacity, 0.01);
+        gsap.to(r, { _fade: 1, duration: 1 + i * 0.3, delay: i * 0.15, ease: 'power2.out', overwrite: true });
+      });
     },
-    () => rings.forEach(r => gsap.to(r.material, { opacity: 0, duration: 0.5 }))
+    () => rings.forEach(r => gsap.to(r, { _fade: 0, duration: 0.5, overwrite: true }))
   );
 }
 

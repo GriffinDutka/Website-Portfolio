@@ -1,12 +1,20 @@
 import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { prepareSkillsGraph, startSkillsDraw } from './skills.js?v=2';
-import { initHeroParticles } from './hero.js';
-import { initSceneObjects, tickSceneObjects } from './scene-objects.js';
-import { initParallax, tickParallax, initGlitchLabels, initHeroNameGlitch, initCursor, initScrollProgress, initHeroTerminal } from './effects.js?v=2';
+import { initHeroParticles } from './hero.js?v=2';
+import { initSceneObjects, tickSceneObjects } from './scene-objects.js?v=2';
+import { initParallax, tickParallax, initGlitchLabels, initHeroNameGlitch, initCursor, initScrollProgress, initHeroTerminal } from './effects.js?v=3';
+import { initAgentOps } from './agents.js?v=3';
 
 const gsap         = window.gsap;
 const ScrollTrigger = window.ScrollTrigger;
 gsap.registerPlugin(ScrollTrigger);
+
+const PREFERS_REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ── FORCE SCROLL TO TOP ON (RE)LOAD ───────────────────────────────────────────
 // Stop the browser from restoring the previous scroll position so every load
@@ -18,6 +26,29 @@ window.addEventListener('load', () => window.scrollTo(0, 0));
 // Phones/tablets get a lighter scene: fewer particles, lower pixel ratio, no
 // antialiasing, fewer data streams. Big battery/heat win, visually near-identical.
 const IS_MOBILE = window.matchMedia('(max-width: 768px)').matches;
+
+// ── LENIS INERTIA SCROLL ─────────────────────────────────────────────────────
+// Desktop only — touch devices keep native scrolling, reduced-motion users
+// keep instant scrolling. GSAP's ticker drives Lenis so ScrollTrigger and the
+// scroll position never disagree.
+let lenis = null;
+if (!IS_MOBILE && !PREFERS_REDUCED && window.Lenis) {
+  lenis = new window.Lenis({ lerp: 0.09 });
+  window.__lenis = lenis;
+  lenis.on('scroll', ScrollTrigger.update);
+  gsap.ticker.add((time) => lenis.raf(time * 1000));
+  gsap.ticker.lagSmoothing(0);
+
+  // Anchor links (side nav) route through Lenis for an eased flight
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (!target) return;
+      e.preventDefault();
+      lenis.scrollTo(target, { duration: 1.6 });
+    });
+  });
+}
 
 // ── LOADER ───────────────────────────────────────────────────────────────────
 const loaderEl  = document.getElementById('loader');
@@ -52,6 +83,64 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 const scene  = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 0, 50);
+
+// ── POST-PROCESSING (desktop only) ───────────────────────────────────────────
+// RenderPass → bloom → OutputPass (sRGB) → CRT pass. The CRT pass carries
+// film grain plus chromatic aberration that scales with scroll velocity, so
+// fast scrolling smears the scene like a damaged feed.
+const CRTShader = {
+  uniforms: {
+    tDiffuse:  { value: null },
+    uTime:     { value: 0 },
+    uVelocity: { value: 0 },
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float uTime;
+    uniform float uVelocity;
+    varying vec2 vUv;
+    float rand(vec2 co) { return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453); }
+    void main() {
+      float v = clamp(abs(uVelocity), 0.0, 60.0) / 60.0;
+      vec2 dir = vUv - 0.5;
+      float amt = 0.0012 + v * 0.011;
+      float r = texture2D(tDiffuse, vUv - dir * amt).r;
+      float g = texture2D(tDiffuse, vUv).g;
+      float b = texture2D(tDiffuse, vUv + dir * amt).b;
+      vec3 col = vec3(r, g, b);
+      col += (rand(vUv * fract(uTime) * 100.0) - 0.5) * 0.045;
+      float vig = smoothstep(0.95, 0.35, length(dir));
+      col *= mix(0.84, 1.0, vig);
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `,
+};
+
+const USE_FX = !IS_MOBILE && !PREFERS_REDUCED;
+let composer = null, crtPass = null;
+if (USE_FX) {
+  // Composer output is opaque, so paint the scene background to match the page
+  scene.background = new THREE.Color(0x050a0f);
+  composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  const bloom = new UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight), 0.5, 0.85, 0.0
+  );
+  composer.addPass(bloom);
+  composer.addPass(new OutputPass());
+  crtPass = new ShaderPass(CRTShader);
+  composer.addPass(crtPass);
+}
+
+// Smoothed scroll velocity (px/frame) feeding the CRT aberration uniform
+let scrollVel = 0, lastScrollY = window.scrollY;
 
 // ── PARTICLE FIELD ───────────────────────────────────────────────────────────
 const PARTICLE_COUNT = IS_MOBILE ? 1000 : 2800;
@@ -147,17 +236,41 @@ for (let s = 0; s < (IS_MOBILE ? 8 : 18); s++) {
 // The render loop lerps the actual Three.js camera toward it.
 const rig = { x: 0, y: 0, z: 50, rx: 0, ry: 0 };
 
-// Section waypoints — camera drifts to these positions as each section enters
+// Section waypoints — stops along the camera flight path. The camera flies a
+// single Catmull-Rom curve through these positions, so the journey between
+// sections is one continuous banked flight instead of discrete lerps.
 const WAYPOINTS = [
   { id: 'hero',       z: 50,  x:  0,  y:  0,  rx:  0.000, ry:  0.000, color: null        },
   { id: 'summary',    z: 44,  x: -5,  y:  1,  rx:  0.018, ry: -0.040, color: 0x00d4ff    },
   { id: 'experience', z: 37,  x:  5,  y: -2,  rx: -0.022, ry:  0.055, color: 0xf59e0b    },
   { id: 'stats',      z: 30,  x: -3,  y:  0,  rx:  0.008, ry: -0.030, color: 0x22c55e    },
-  { id: 'skills',     z: 23,  x:  4,  y:  2,  rx:  0.012, ry:  0.045, color: 0xa78bfa    },
+  { id: 'agents',     z: 26,  x:  4,  y: -1,  rx: -0.012, ry:  0.040, color: 0xef4444    },
+  { id: 'skills',     z: 22,  x:  4,  y:  2,  rx:  0.012, ry:  0.045, color: 0xa78bfa    },
   { id: 'education',  z: 17,  x: -2,  y: -1,  rx: -0.010, ry: -0.020, color: 0x00d4ff    },
   { id: 'about',      z: 14,  x:  3,  y:  1,  rx:  0.010, ry:  0.030, color: 0x22c55e    },
   { id: 'contact',    z: 12,  x:  0,  y:  0,  rx:  0.000, ry:  0.000, color: null        },
 ];
+
+const cameraPath = new THREE.CatmullRomCurve3(
+  WAYPOINTS.map(wp => new THREE.Vector3(wp.x, wp.y, wp.z)),
+  false, 'catmullrom', 0.6
+);
+// Single scalar scrubbed by ScrollTrigger; the render loop samples the curve
+const pathState = { t: 0 };
+const _pathPoint = new THREE.Vector3();
+
+function samplePath() {
+  const t = Math.max(0, Math.min(1, pathState.t));
+  cameraPath.getPoint(t, _pathPoint);
+  rig.x = _pathPoint.x;
+  rig.y = _pathPoint.y;
+  rig.z = _pathPoint.z;
+  const seg = t * (WAYPOINTS.length - 1);
+  const i0  = Math.min(Math.floor(seg), WAYPOINTS.length - 2);
+  const f   = seg - i0;
+  rig.rx = WAYPOINTS[i0].rx + (WAYPOINTS[i0 + 1].rx - WAYPOINTS[i0].rx) * f;
+  rig.ry = WAYPOINTS[i0].ry + (WAYPOINTS[i0 + 1].ry - WAYPOINTS[i0].ry) * f;
+}
 
 // ── MOUSE PARALLAX ────────────────────────────────────────────────────────────
 let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
@@ -169,6 +282,25 @@ document.addEventListener('mousemove', e => {
 // ── CURSOR + SCROLL PROGRESS (init immediately — no need to wait for hero) ───
 initCursor();
 initScrollProgress();
+
+// ── VIEW_RESUME MENU ─────────────────────────────────────────────────────────
+// JS-driven open class alongside CSS :hover — covers keyboard focus and touch
+const rvWrap = document.querySelector('.resume-view-wrap');
+if (rvWrap) {
+  let closeTimer = null;
+  const openMenu  = () => { clearTimeout(closeTimer); rvWrap.classList.add('open'); };
+  // Grace period so the pointer can cross the gap to the menu without closing
+  const closeMenu = () => {
+    clearTimeout(closeTimer);
+    closeTimer = setTimeout(() => rvWrap.classList.remove('open'), 250);
+  };
+  rvWrap.addEventListener('mouseenter', openMenu);
+  rvWrap.addEventListener('mouseleave', closeMenu);
+  rvWrap.addEventListener('focusin', openMenu);
+  rvWrap.addEventListener('focusout', e => {
+    if (!rvWrap.contains(e.relatedTarget)) closeMenu();
+  });
+}
 
 // ── SIDE NAV ─────────────────────────────────────────────────────────────────
 const sideNav    = document.getElementById('side-nav');
@@ -235,15 +367,15 @@ function initScrollAnimations() {
       onEnterBack:  () => { setActiveNav(wp.id); flashVignette(); },
     });
 
-    // Camera rig animation — scrubbed between sections
+    // Camera path scrub — each section advances the flight-path scalar one
+    // segment; the render loop samples the curve for position + rotation.
     if (i === 0) return;
-    const prev = WAYPOINTS[i - 1];
-    const prevEl = document.getElementById(prev.id);
+    const segLen = 1 / (WAYPOINTS.length - 1);
 
-    gsap.fromTo(rig,
-      { x: prev.x, y: prev.y, z: prev.z, rx: prev.rx, ry: prev.ry },
+    gsap.fromTo(pathState,
+      { t: (i - 1) * segLen },
       {
-        x: wp.x, y: wp.y, z: wp.z, rx: wp.rx, ry: wp.ry,
+        t: i * segLen,
         ease: 'none',
         scrollTrigger: {
           trigger: el,
@@ -279,6 +411,9 @@ function initScrollAnimations() {
 
   // ── 3D scene accent objects ────────────────────────────────────────────────
   initSceneObjects(scene, clock);
+
+  // ── Agent Operations pipeline (pinned scrub section) ──────────────────────
+  initAgentOps();
 
   // ── Parallax + glitch ────────────────────────────────────────────────────
   initParallax();
@@ -348,6 +483,9 @@ function animate() {
   targetX += (mouseX - targetX) * 0.03;
   targetY += (mouseY - targetY) * 0.03;
 
+  // Flight path → rig
+  samplePath();
+
   // Lerp camera toward rig target + mouse offset
   camera.position.x += (rig.x + targetX * 5  - camera.position.x) * 0.04;
   camera.position.y += (rig.y - targetY * 3.5 - camera.position.y) * 0.04;
@@ -367,7 +505,17 @@ function animate() {
   tickSceneObjects();
   tickParallax();
 
-  renderer.render(scene, camera);
+  if (composer) {
+    // Smoothed scroll velocity drives the chromatic aberration smear
+    const sy = window.scrollY;
+    scrollVel += ((sy - lastScrollY) - scrollVel) * 0.12;
+    lastScrollY = sy;
+    crtPass.uniforms.uTime.value     = elapsed;
+    crtPass.uniforms.uVelocity.value = scrollVel;
+    composer.render();
+  } else {
+    renderer.render(scene, camera);
+  }
 }
 
 animate();
@@ -380,6 +528,7 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  if (composer) composer.setSize(window.innerWidth, window.innerHeight);
 });
 
 // ── SCROLL REVEAL (cards, stats, education) ───────────────────────────────────

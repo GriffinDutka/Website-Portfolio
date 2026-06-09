@@ -230,7 +230,7 @@ export function initCursor() {
   })();
 
   // Expand ring on interactive elements
-  document.querySelectorAll('a, .case-card, .stat-card, .edu-card, .nav-dot, .compliance-tags span')
+  document.querySelectorAll('a, .case-card, .stat-card, .edu-card, .agent-card, .agent-node, .nav-dot, .compliance-tags span')
     .forEach(el => {
       el.addEventListener('mouseenter', () => { targetScale = 1.55; targetAlpha = 0.85; });
       el.addEventListener('mouseleave', () => { targetScale = 1;    targetAlpha = 1;    });

@@ -29,9 +29,10 @@
   <meta name="twitter:description" content="DLP, AI-driven security automation, and incident response." />
   <meta name="twitter:image" content="https://grifftty.com/og-card.png" />
 
-  <link rel="stylesheet" href="src/style.css?v=3" />
+  <link rel="stylesheet" href="src/style.css?v=8" />
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
   <script type="importmap">
     {
       "imports": {
@@ -204,12 +205,12 @@
       <div class="stat-card" data-reveal data-count="200" data-suffix="+">
         <div class="stat-number"><span class="count">0</span><span class="stat-unit">h+</span></div>
         <div class="stat-label">Analyst Hours Recovered</div>
-        <div class="stat-sub">Per month via AI pipeline</div>
+        <div class="stat-sub">Per month via AI automation pipelines &amp; SOC/DLP agentics</div>
       </div>
       <div class="stat-card" data-reveal data-count="80000" data-suffix="+">
         <div class="stat-number"><span class="count">0</span><span class="stat-unit">GB+</span></div>
         <div class="stat-label">Stale Data Surfaced</div>
-        <div class="stat-sub">Across 4,500+ devices · automated deletion via custom scripts</div>
+        <div class="stat-sub">Across 4,500+ endpoints · automated deletion via custom Mac/Windows scripts</div>
       </div>
       <div class="stat-card" data-reveal data-count="2.5" data-suffix="%" data-decimal="true">
         <div class="stat-number"><span class="stat-lt">&lt;</span><span class="count">0</span><span class="stat-unit">%</span></div>
@@ -219,7 +220,136 @@
       <div class="stat-card" data-reveal data-count="20" data-suffix="+">
         <div class="stat-number"><span class="count">0</span><span class="stat-unit">+</span></div>
         <div class="stat-label">Security Controls</div>
-        <div class="stat-sub">Implemented post-P0 incident</div>
+        <div class="stat-sub">Implemented to reduce company risk factors</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── AGENT OPERATIONS CENTER ── -->
+  <section id="agents" class="section section-content">
+    <div class="section-label">// AGENT OPERATIONS</div>
+    <div class="agents-intro">
+      Scroll to drive a simulated DLP incident through the agentic pipeline I built and run in production.
+      <span class="agents-disclaimer">All incident data below is synthetic.</span>
+    </div>
+
+    <div id="agent-stage">
+      <div class="pipeline-wrap">
+
+        <!-- Node track -->
+        <div class="pipeline-track">
+          <div class="pipeline-line"><div class="pipeline-line-fill" id="pipeline-fill"></div></div>
+          <div class="pipeline-packet" id="pipeline-packet"></div>
+          <div class="pipeline-nodes">
+            <div class="agent-node" data-stage="0">
+              <div class="agent-node-ring"></div>
+              <div class="agent-node-core"></div>
+              <div class="agent-node-label">ALERT INGEST</div>
+              <div class="agent-node-sub">CyberHaven sensor</div>
+            </div>
+            <div class="agent-node" data-stage="1">
+              <div class="agent-node-ring"></div>
+              <div class="agent-node-core"></div>
+              <div class="agent-node-label">TRIAGE AGENT</div>
+              <div class="agent-node-sub">risk scoring</div>
+            </div>
+            <div class="agent-node" data-stage="2">
+              <div class="agent-node-ring"></div>
+              <div class="agent-node-core"></div>
+              <div class="agent-node-label">ACTIVITY REVIEW</div>
+              <div class="agent-node-sub">24h footage review</div>
+            </div>
+            <div class="agent-node" data-stage="3">
+              <div class="agent-node-ring"></div>
+              <div class="agent-node-core"></div>
+              <div class="agent-node-label">LOG &amp; TIMELINE</div>
+              <div class="agent-node-sub">full timeline build</div>
+            </div>
+            <div class="agent-node" data-stage="4">
+              <div class="agent-node-ring"></div>
+              <div class="agent-node-core"></div>
+              <div class="agent-node-label">REPORT GEN</div>
+              <div class="agent-node-sub">exec-ready draft</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live agent terminal -->
+        <div class="agent-lower">
+          <div class="agent-terminal">
+            <div class="terminal-header">
+              <div class="t-dots">
+                <span class="t-dot" style="background:#ef4444"></span>
+                <span class="t-dot" style="background:#f59e0b"></span>
+                <span class="t-dot" style="background:#22c55e"></span>
+              </div>
+              <span class="t-title">agent_pipeline.log — incident DLP-2026-0609</span>
+            </div>
+            <div class="agent-terminal-body" id="agent-terminal-body"></div>
+          </div>
+
+          <!-- Final report artifact -->
+          <div class="agent-report" id="agent-report">
+            <div class="report-corner tl"></div><div class="report-corner tr"></div>
+            <div class="report-corner bl"></div><div class="report-corner br"></div>
+            <div class="report-head">DLP INCIDENT REPORT</div>
+            <div class="report-id">DLP-2026-0609 · SEVERITY: HIGH</div>
+            <div class="report-rows">
+              <div class="report-row"><span>DRAFT TIME</span><strong>9:47 min</strong></div>
+              <div class="report-row"><span>HUMAN CORRECTIONS</span><strong>0</strong></div>
+              <div class="report-row"><span>EVIDENCE ARTIFACTS</span><strong>14</strong></div>
+              <div class="report-row"><span>STATUS</span><strong class="report-ok">READY FOR ESCALATION</strong></div>
+            </div>
+            <div class="report-stamp">AGENT-DRAFTED</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Agent dossiers -->
+    <div class="agent-grid">
+      <div class="agent-card" data-reveal>
+        <div class="agent-card-top"><span class="agent-codename">SCRIBE</span><span class="agent-status">DEPLOYED</span></div>
+        <div class="agent-mission">End-to-end DLP report generation. Drafts weekly &amp; monthly executive reports from raw incident data.</div>
+        <div class="agent-kv"><span>TRIGGER</span>incident closure · report cadence</div>
+        <div class="agent-kv"><span>STACK</span>Claude · CyberHaven · Datadog</div>
+        <div class="agent-metric">300+ reports · 60–90 min → &lt;10 min</div>
+      </div>
+      <div class="agent-card" data-reveal>
+        <div class="agent-card-top"><span class="agent-codename">OVERWATCH</span><span class="agent-status">DEPLOYED</span></div>
+        <div class="agent-mission">Real-time user activity reviews — pulls, correlates, and summarizes 24h windows of CyberHaven activity and Teramind footage on demand.</div>
+        <div class="agent-kv"><span>TRIGGER</span>DLP escalation · HRUM review</div>
+        <div class="agent-kv"><span>STACK</span>Claude /skills · CyberHaven API</div>
+        <div class="agent-metric">25+ analyst reviews coordinated daily</div>
+      </div>
+      <div class="agent-card" data-reveal>
+        <div class="agent-card-top"><span class="agent-codename">SIFT</span><span class="agent-status">DEPLOYED</span></div>
+        <div class="agent-mission">Automated Datadog log analysis — auth events, endpoint signals, and anomaly correlation without manual SPL spelunking.</div>
+        <div class="agent-kv"><span>TRIGGER</span>incident investigation</div>
+        <div class="agent-kv"><span>STACK</span>Claude · Datadog · Torq SOAR</div>
+        <div class="agent-metric">Minutes per query, not hours</div>
+      </div>
+      <div class="agent-card" data-reveal>
+        <div class="agent-card-top"><span class="agent-codename">REWIND</span><span class="agent-status">DEPLOYED</span></div>
+        <div class="agent-mission">Feeds emails, Teramind footage timelines, and log data into a timeline agent that builds a full incident timeline report — investigator-ready chronology.</div>
+        <div class="agent-kv"><span>TRIGGER</span>activity review escalation</div>
+        <div class="agent-kv"><span>STACK</span>Teramind · Datadog · AI timeline agent</div>
+        <div class="agent-metric">Full timeline reports in one pass</div>
+      </div>
+      <div class="agent-card" data-reveal>
+        <div class="agent-card-top"><span class="agent-codename">SPECTER</span><span class="agent-status">SELF-IMPROVING</span></div>
+        <div class="agent-mission">Browser-based investigation skills that critique and refine their own outputs after every run.</div>
+        <div class="agent-kv"><span>TRIGGER</span>novel investigation patterns</div>
+        <div class="agent-kv"><span>STACK</span>Claude skills · browser automation</div>
+        <div class="agent-metric">Improves with every investigation</div>
+      </div>
+      <div class="agent-card" data-reveal>
+        <div class="agent-card-top"><span class="agent-codename">ACTION HUB</span><span class="agent-status">LIVE MONITOR</span></div>
+        <div class="agent-mission">Daily analyst dashboard in Claude Cowork — task check-offs, ticket pulls, completion logging, and program-wide visibility for VPs.</div>
+        <div class="agent-kv"><span>TRIGGER</span>always on</div>
+        <div class="agent-kv"><span>STACK</span>Claude Cowork</div>
+        <div class="agent-metric">One pane of glass for the DLP program</div>
       </div>
     </div>
   </section>
@@ -330,6 +460,23 @@
         <span class="resume-btn-label">DOWNLOAD_RESUME.PDF</span>
         <span class="resume-btn-tag">PDF</span>
       </a>
+      <div class="resume-view-wrap">
+        <a class="resume-btn ghost" href="resume-twocolumn.html" target="_blank" rel="noopener" aria-label="View résumé — hover for style options" aria-haspopup="true">
+          <span class="resume-btn-icon">▸</span>
+          <span class="resume-btn-label">VIEW_RESUME</span>
+          <span class="resume-btn-tag">▾</span>
+        </a>
+        <div class="resume-menu" role="menu">
+          <a class="resume-menu-item" role="menuitem" href="resume-twocolumn.html" target="_blank" rel="noopener">
+            <span class="rm-name">CLASSIC</span>
+            <span class="rm-desc">clean two-column · recruiter-friendly</span>
+          </a>
+          <a class="resume-menu-item rm-cyber" role="menuitem" href="resume-dark.html" target="_blank" rel="noopener">
+            <span class="rm-name">CYBER</span>
+            <span class="rm-desc">dark terminal edition</span>
+          </a>
+        </div>
+      </div>
       <a class="resume-btn ghost" href="mailto:griffindutka0@gmail.com" aria-label="Email Griffin Dutka">
         <span class="resume-btn-icon">▸</span>
         <span class="resume-btn-label">EMAIL_ME</span>
@@ -343,6 +490,7 @@
     <a class="nav-dot" data-section="summary"    href="#summary"    title="Profile"></a>
     <a class="nav-dot" data-section="experience" href="#experience" title="Experience"></a>
     <a class="nav-dot" data-section="stats"      href="#stats"      title="Telemetry"></a>
+    <a class="nav-dot" data-section="agents"     href="#agents"     title="Agents"></a>
     <a class="nav-dot" data-section="skills"     href="#skills"     title="Skills"></a>
     <a class="nav-dot" data-section="education"  href="#education"  title="Education"></a>
     <a class="nav-dot" data-section="about"      href="#about"      title="About"></a>
@@ -352,6 +500,6 @@
   <!-- Vignette flash on section cross -->
   <div id="vignette"></div>
 
-  <script type="module" src="src/main.js?v=30"></script>
+  <script type="module" src="src/main.js?v=36"></script>
 </body>
 </html>
