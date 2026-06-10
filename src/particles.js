@@ -267,9 +267,11 @@ function shapeShield(n) {
 
 function shapeGlobe(n) {
   const pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
-  // The camera flight ends at z=12; keep the globe's front face beyond the
-  // near-fade distance so it reads big and bright without swallowing the camera
-  const CZ = -30, R = 18;
+  // Big and close on purpose: the camera flight ends just inside the front
+  // face, so the finale reads as flying INTO the globe. The near-camera fade
+  // dissolves particles before they can blow out, and the contact content
+  // sits on glass panels.
+  const CZ = -16, R = 20;
 
   const i1 = Math.floor(n * 0.46), i2 = Math.floor(n * 0.72), i3 = Math.floor(n * 0.86);
   for (let i = 0; i < i1; i++) {
@@ -406,10 +408,10 @@ export function initMorphParticles(scene, isMobile) {
         vBoost = mix(uBoostA, uBoostB, m);
 
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
-        // Cap sprite size and fade particles near the camera so close passes
-        // never wash out the foreground content
-        gl_PointSize = min(size * (300.0 / -mv.z), 5.0);
-        vFade = smoothstep(4.0, 16.0, -mv.z);
+        // Cap sprite size and fade particles near the camera — close passes
+        // stay immersive but never white out the foreground
+        gl_PointSize = min(size * (300.0 / -mv.z), 6.0);
+        vFade = smoothstep(2.5, 9.0, -mv.z);
         gl_Position = projectionMatrix * mv;
       }
     `,
@@ -505,6 +507,20 @@ export function initMorphParticles(scene, isMobile) {
     uniforms.uRotX.value = elapsed * 0.003 + rot.x;
     uniforms.uRotY.value = rot.y;
   }
+
+  // Pre-generate every section shape during idle time after the intro, so the
+  // first scroll past each section never pays the generation cost mid-frame.
+  function prewarm() {
+    const names = ['field', 'padlock', 'network', 'rings', 'shield', 'globe'];
+    let i = 0;
+    const step = () => {
+      if (i >= names.length) return;
+      getShape(names[i++]);
+      setTimeout(step, 150);
+    };
+    setTimeout(step, 2500);
+  }
+  prewarm();
 
   return { mesh, material, rot, setShape, intro, tick };
 }

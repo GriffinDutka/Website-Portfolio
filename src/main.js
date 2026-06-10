@@ -5,7 +5,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { prepareSkillsGraph, startSkillsDraw } from './skills.js?v=2';
-import { initMorphParticles } from './particles.js?v=3';
+import { initMorphParticles } from './particles.js?v=4';
 import { initSceneObjects, tickSceneObjects } from './scene-objects.js?v=2';
 import { initParallax, tickParallax, initGlitchLabels, initHeroNameGlitch, initCursor, initScrollProgress, initHeroTerminal } from './effects.js?v=3';
 import { initAgentOps } from './agents.js?v=3';
@@ -384,6 +384,44 @@ function initScrollAnimations() {
     y: 30, opacity: 0, duration: 0.9, ease: 'power3.out',
     stagger: 0.15,
   });
+
+  // ── SNAP TO SECTIONS ───────────────────────────────────────────────────────
+  // When scrolling settles near a section top, glide the rest of the way via
+  // Lenis. Window is ~1/3 viewport so stopping mid-journey is still allowed,
+  // and inside the pinned agent stage nothing is near — the scrub stays free.
+  if (lenis) {
+    const SNAP_WINDOW = 0.38;
+    let snapTimer = null;
+    let snapping = false;
+
+    const trySnap = () => {
+      if (snapping) return;
+      const y = window.scrollY;
+      let best = null, bestDist = Infinity;
+      WAYPOINTS.forEach(wp => {
+        const el = document.getElementById(wp.id);
+        if (!el) return;
+        const top = el.getBoundingClientRect().top + y;
+        const d = top - y;
+        if (Math.abs(d) < Math.abs(bestDist)) { bestDist = d; best = top; }
+      });
+      if (best === null) return;
+      if (Math.abs(bestDist) < 6 || Math.abs(bestDist) > window.innerHeight * SNAP_WINDOW) return;
+      snapping = true;
+      lenis.scrollTo(best, {
+        duration: 0.9,
+        onComplete: () => { snapping = false; },
+      });
+      // Fallback unlock in case a user interrupt swallows onComplete
+      setTimeout(() => { snapping = false; }, 1200);
+    };
+
+    lenis.on('scroll', () => {
+      if (snapping) return;
+      clearTimeout(snapTimer);
+      snapTimer = setTimeout(trySnap, 240);
+    });
+  }
 
   // ── Particle cloud slow rotation with scroll ───────────────────────────────
   // Rotation lives in the particle vertex shader (damped to ~0 while a shape
