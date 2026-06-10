@@ -5,7 +5,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { prepareSkillsGraph, startSkillsDraw } from './skills.js?v=2';
-import { initHeroParticles } from './hero.js?v=2';
+import { initMorphParticles } from './particles.js?v=1';
 import { initSceneObjects, tickSceneObjects } from './scene-objects.js?v=2';
 import { initParallax, tickParallax, initGlitchLabels, initHeroNameGlitch, initCursor, initScrollProgress, initHeroTerminal } from './effects.js?v=3';
 import { initAgentOps } from './agents.js?v=3';
@@ -142,73 +142,13 @@ if (USE_FX) {
 // Smoothed scroll velocity (px/frame) feeding the CRT aberration uniform
 let scrollVel = 0, lastScrollY = window.scrollY;
 
-// ── PARTICLE FIELD ───────────────────────────────────────────────────────────
-const PARTICLE_COUNT = IS_MOBILE ? 1000 : 2800;
-const positions  = new Float32Array(PARTICLE_COUNT * 3);
-const colors     = new Float32Array(PARTICLE_COUNT * 3);
-const sizes      = new Float32Array(PARTICLE_COUNT);
-const velocities = [];
-
-const cyanColor  = new THREE.Color(0x00d4ff);
-const amberColor = new THREE.Color(0xf59e0b);
-const dimColor   = new THREE.Color(0x0d1f2d);
-
-for (let i = 0; i < PARTICLE_COUNT; i++) {
-  positions[i * 3]     = (Math.random() - 0.5) * 200;
-  positions[i * 3 + 1] = (Math.random() - 0.5) * 200;
-  positions[i * 3 + 2] = (Math.random() - 0.5) * 120 - 30;
-
-  const r   = Math.random();
-  const col = r < 0.04 ? cyanColor : r < 0.08 ? amberColor : dimColor;
-  colors[i * 3]     = col.r;
-  colors[i * 3 + 1] = col.g;
-  colors[i * 3 + 2] = col.b;
-
-  sizes[i] = r < 0.06 ? Math.random() * 2.5 + 1 : Math.random() * 1.2 + 0.3;
-  velocities.push({
-    x: (Math.random() - 0.5) * 0.012,
-    y: (Math.random() - 0.5) * 0.012,
-    z: (Math.random() - 0.5) * 0.006,
-  });
-}
-
-const particleGeo = new THREE.BufferGeometry();
-particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-particleGeo.setAttribute('aColor',   new THREE.BufferAttribute(colors, 3));
-particleGeo.setAttribute('size',     new THREE.BufferAttribute(sizes, 1));
-
-const particleMat = new THREE.ShaderMaterial({
-  uniforms: { uColorShift: { value: new THREE.Color(0x000000) }, uShiftStrength: { value: 0.0 } },
-  vertexShader: `
-    attribute float size;
-    attribute vec3 aColor;
-    varying vec3 vColor;
-    void main() {
-      vColor = aColor;
-      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-      gl_PointSize = size * (300.0 / -mvPosition.z);
-      gl_Position = projectionMatrix * mvPosition;
-    }
-  `,
-  fragmentShader: `
-    uniform vec3 uColorShift;
-    uniform float uShiftStrength;
-    varying vec3 vColor;
-    void main() {
-      float d = length(gl_PointCoord - vec2(0.5));
-      if (d > 0.5) discard;
-      float alpha = 1.0 - smoothstep(0.2, 0.5, d);
-      vec3 col = mix(vColor, uColorShift, uShiftStrength * 0.18);
-      gl_FragColor = vec4(col, alpha * 0.9);
-    }
-  `,
-  transparent: true,
-  depthWrite: false,
-  blending: THREE.AdditiveBlending,
-});
-
-const particlesMesh = new THREE.Points(particleGeo, particleMat);
-scene.add(particlesMesh);
+// ── MORPHING PARTICLE ENGINE ─────────────────────────────────────────────────
+// 40k GPU-blended particles (9k mobile). Sections morph the cloud into shapes
+// via setShape(); see particles.js. particleMat keeps the same uniform names
+// so the per-section color-shift triggers below work unchanged.
+const particles   = initMorphParticles(scene, IS_MOBILE);
+const particleMat = particles.material;
+window.__particles = particles; // debug/inspection handle
 
 // ── DATA STREAMS ─────────────────────────────────────────────────────────────
 const streams = [];
@@ -240,15 +180,15 @@ const rig = { x: 0, y: 0, z: 50, rx: 0, ry: 0 };
 // single Catmull-Rom curve through these positions, so the journey between
 // sections is one continuous banked flight instead of discrete lerps.
 const WAYPOINTS = [
-  { id: 'hero',       z: 50,  x:  0,  y:  0,  rx:  0.000, ry:  0.000, color: null        },
-  { id: 'summary',    z: 44,  x: -5,  y:  1,  rx:  0.018, ry: -0.040, color: 0x00d4ff    },
-  { id: 'experience', z: 37,  x:  5,  y: -2,  rx: -0.022, ry:  0.055, color: 0xf59e0b    },
-  { id: 'stats',      z: 30,  x: -3,  y:  0,  rx:  0.008, ry: -0.030, color: 0x22c55e    },
-  { id: 'agents',     z: 26,  x:  4,  y: -1,  rx: -0.012, ry:  0.040, color: 0xef4444    },
-  { id: 'skills',     z: 22,  x:  4,  y:  2,  rx:  0.012, ry:  0.045, color: 0xa78bfa    },
-  { id: 'education',  z: 17,  x: -2,  y: -1,  rx: -0.010, ry: -0.020, color: 0x00d4ff    },
-  { id: 'about',      z: 14,  x:  3,  y:  1,  rx:  0.010, ry:  0.030, color: 0x22c55e    },
-  { id: 'contact',    z: 12,  x:  0,  y:  0,  rx:  0.000, ry:  0.000, color: null        },
+  { id: 'hero',       z: 50,  x:  0,  y:  0,  rx:  0.000, ry:  0.000, color: null,     shape: null      },
+  { id: 'summary',    z: 44,  x: -5,  y:  1,  rx:  0.018, ry: -0.040, color: 0x00d4ff, shape: 'field'   },
+  { id: 'experience', z: 37,  x:  5,  y: -2,  rx: -0.022, ry:  0.055, color: 0xf59e0b, shape: 'padlock' },
+  { id: 'stats',      z: 30,  x: -3,  y:  0,  rx:  0.008, ry: -0.030, color: 0x22c55e, shape: 'field'   },
+  { id: 'agents',     z: 26,  x:  4,  y: -1,  rx: -0.012, ry:  0.040, color: 0xef4444, shape: 'network' },
+  { id: 'skills',     z: 22,  x:  4,  y:  2,  rx:  0.012, ry:  0.045, color: 0xa78bfa, shape: 'rings'   },
+  { id: 'education',  z: 17,  x: -2,  y: -1,  rx: -0.010, ry: -0.020, color: 0x00d4ff, shape: 'shield'  },
+  { id: 'about',      z: 14,  x:  3,  y:  1,  rx:  0.010, ry:  0.030, color: 0x22c55e, shape: 'field'   },
+  { id: 'contact',    z: 12,  x:  0,  y:  0,  rx:  0.000, ry:  0.000, color: null,     shape: 'globe'   },
 ];
 
 const cameraPath = new THREE.CatmullRomCurve3(
@@ -317,10 +257,9 @@ function flashVignette() {
 }
 
 // ── HERO PARTICLE ANIMATION ──────────────────────────────────────────────────
-let heroAnim = null;
-
+// Burst cloud converges into "GRIFFIN DUTKA", holds, then dissolves to field.
 function startHeroSequence() {
-  heroAnim = initHeroParticles(particleGeo, velocities, revealHeroContent);
+  particles.intro(revealHeroContent);
 }
 
 function revealHeroContent() {
@@ -386,6 +325,17 @@ function initScrollAnimations() {
       }
     );
 
+    // Particle shape morph per section — fires in both scroll directions
+    if (wp.shape) {
+      ScrollTrigger.create({
+        trigger: el,
+        start: 'top 58%',
+        end:   'bottom 42%',
+        onEnter:     () => particles.setShape(wp.shape),
+        onEnterBack: () => particles.setShape(wp.shape),
+      });
+    }
+
     // Particle color shift per section
     if (wp.color) {
       const shiftCol = new THREE.Color(wp.color);
@@ -436,8 +386,9 @@ function initScrollAnimations() {
   });
 
   // ── Particle cloud slow rotation with scroll ───────────────────────────────
-  // Explicitly bound scrub so GSAP doesn't create an unbounded page-wide tween.
-  gsap.to(particlesMesh.rotation, {
+  // Rotation lives in the particle vertex shader (damped to ~0 while a shape
+  // is held so the padlock/globe stay upright); this just scrubs the proxy.
+  gsap.to(particles.rot, {
     y: Math.PI * 0.5,
     ease: 'none',
     scrollTrigger: {
@@ -451,33 +402,13 @@ function initScrollAnimations() {
 
 // ── RENDER LOOP ───────────────────────────────────────────────────────────────
 const clock = new THREE.Clock();
-let _raf = 0;
 
 function animate() {
   requestAnimationFrame(animate);
   const elapsed = clock.getElapsedTime();
-  _raf++;
 
-  // Hero particle convergence tick
-  if (heroAnim) {
-    const alive = heroAnim.tick(performance.now());
-    if (!alive) heroAnim = null;
-  } else if (_raf % 2 === 0) {
-    // Normal drift — update every other frame (imperceptible at 30fps, halves CPU cost)
-    const pos = particleGeo.attributes.position.array;
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      pos[i * 3]     += velocities[i].x;
-      pos[i * 3 + 1] += velocities[i].y;
-      pos[i * 3 + 2] += velocities[i].z;
-      if (pos[i * 3]     >  100) pos[i * 3]     = -100;
-      if (pos[i * 3]     < -100) pos[i * 3]     =  100;
-      if (pos[i * 3 + 1] >  100) pos[i * 3 + 1] = -100;
-      if (pos[i * 3 + 1] < -100) pos[i * 3 + 1] =  100;
-      if (pos[i * 3 + 2] >   30) pos[i * 3 + 2] =  -60;
-      if (pos[i * 3 + 2] <  -60) pos[i * 3 + 2] =   30;
-    }
-    particleGeo.attributes.position.needsUpdate = true;
-  }
+  // Particle engine: time + scroll rotation uniforms (all motion is GPU-side)
+  particles.tick(elapsed);
 
   // Smooth mouse parallax
   targetX += (mouseX - targetX) * 0.03;
@@ -499,8 +430,6 @@ function animate() {
     if (s.line.position.y < -60) s.line.position.y = 60;
     s.line.material.opacity = 0.04 + 0.12 * Math.abs(Math.sin(elapsed * 0.5 + s.speed));
   });
-
-  particlesMesh.rotation.x = elapsed * 0.003;
 
   tickSceneObjects();
   tickParallax();
