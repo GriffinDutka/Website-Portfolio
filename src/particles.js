@@ -267,7 +267,9 @@ function shapeShield(n) {
 
 function shapeGlobe(n) {
   const pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
-  const CZ = -14, R = 21;
+  // Deep placement — the camera flight ends at z=12, so the globe must sit
+  // well behind the content instead of swallowing the camera
+  const CZ = -34, R = 15;
 
   const i1 = Math.floor(n * 0.46), i2 = Math.floor(n * 0.72), i3 = Math.floor(n * 0.86);
   for (let i = 0; i < i1; i++) {
@@ -375,6 +377,7 @@ export function initMorphParticles(scene, isMobile) {
       uniform float uWobbleA, uWobbleB, uStructA, uStructB, uBoostA, uBoostB;
       varying vec3 vColor;
       varying float vBoost;
+      varying float vFade;
 
       void main() {
         // Per-particle staggered morph progress
@@ -403,7 +406,10 @@ export function initMorphParticles(scene, isMobile) {
         vBoost = mix(uBoostA, uBoostB, m);
 
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
-        gl_PointSize = size * (300.0 / -mv.z);
+        // Cap sprite size and fade particles near the camera so close passes
+        // never wash out the foreground content
+        gl_PointSize = min(size * (300.0 / -mv.z), 5.0);
+        vFade = smoothstep(4.0, 16.0, -mv.z);
         gl_Position = projectionMatrix * mv;
       }
     `,
@@ -412,10 +418,12 @@ export function initMorphParticles(scene, isMobile) {
       uniform float uShiftStrength;
       varying vec3 vColor;
       varying float vBoost;
+      varying float vFade;
       void main() {
         float d = length(gl_PointCoord - vec2(0.5));
         if (d > 0.5) discard;
-        float alpha = 1.0 - smoothstep(0.2, 0.5, d);
+        float alpha = (1.0 - smoothstep(0.2, 0.5, d)) * vFade;
+        if (alpha < 0.003) discard;
         vec3 col = mix(vColor, uColorShift, uShiftStrength * 0.18) * vBoost;
         gl_FragColor = vec4(col, alpha * 0.85);
       }
