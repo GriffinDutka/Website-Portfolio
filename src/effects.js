@@ -141,10 +141,17 @@ function runTVGlitch() {
     [  3,  -3,  1,  1],
   ];
 
+  // White flash overlay — opacity on a composited layer instead of
+  // filter:brightness on the giant heading, which forced full repaints and
+  // caused scroll hiccups
+  const flash = document.createElement('div');
+  flash.style.cssText = 'position:absolute;inset:-6px -14px;background:#fff;opacity:0;pointer-events:none;will-change:opacity;';
+  el.appendChild(flash);
+
   const tl = gsap.timeline({
     onComplete: () => {
-      red.remove(); blue.remove(); scan.remove(); bar.remove();
-      gsap.set(el, { clearProps: 'x,skewX,filter' });
+      red.remove(); blue.remove(); scan.remove(); bar.remove(); flash.remove();
+      gsap.set(el, { clearProps: 'x,skewX' });
       _glitchRunning = false;
     },
   });
@@ -163,11 +170,11 @@ function runTVGlitch() {
     .to(scan, { opacity: 0.8, duration: 0.02, ease: 'none' }, 0.27)
     .to(scan, { opacity: 0,   duration: 0.10, ease: 'none' }, 0.31);
 
-  // Brightness spikes
-  tl.to(el, { filter: 'brightness(2.0)', duration: 0.03, ease: 'none' }, 0.07)
-    .to(el, { filter: 'brightness(1)',   duration: 0.04, ease: 'none' }, 0.13)
-    .to(el, { filter: 'brightness(2.5)', duration: 0.02, ease: 'none' }, 0.24)
-    .to(el, { filter: 'brightness(1)',   duration: 0.07, ease: 'none' }, 0.29);
+  // Brightness spikes — opacity flashes on the overlay (compositor-only)
+  tl.to(flash, { opacity: 0.30, duration: 0.03, ease: 'none' }, 0.07)
+    .to(flash, { opacity: 0,    duration: 0.04, ease: 'none' }, 0.13)
+    .to(flash, { opacity: 0.38, duration: 0.02, ease: 'none' }, 0.24)
+    .to(flash, { opacity: 0,    duration: 0.07, ease: 'none' }, 0.29);
 
   // Noise bar sweep (independent of main tl)
   gsap.fromTo(bar, { top: '-24px' }, { top: '110%', duration: 0.32, ease: 'none', delay: 0.03 });
@@ -188,12 +195,16 @@ export function initHeroNameGlitch() {
     ).observe(hero);
   }
 
-  // Keep the original "glitch on first scroll" beat...
-  window.addEventListener('scroll', () => setTimeout(runTVGlitch, 40), { once: true, passive: true });
+  // Never glitch while the user is scrolling — the overlay churn during a
+  // scroll frame is exactly what reads as a page hiccup. The effect only
+  // fires once scroll has been idle for a beat.
+  let lastScroll = 0;
+  window.addEventListener('scroll', () => { lastScroll = performance.now(); }, { passive: true });
 
-  // ...then re-fire every ~5s while the hero is visible and the tab is focused.
   setInterval(() => {
-    if (heroVisible && document.visibilityState === 'visible') runTVGlitch();
+    if (!heroVisible || document.visibilityState !== 'visible') return;
+    if (performance.now() - lastScroll < 700) return;
+    runTVGlitch();
   }, 5000);
 }
 
@@ -251,25 +262,25 @@ export function initScrollProgress() {
 // ── 6. HERO TERMINAL FEED ────────────────────────────────────────────────────
 
 const LOGS = [
-  { level: 'INFO',  msg: 'CyberHaven: DLP policy scan — 1,847 users active' },
+  { level: 'INFO',  msg: 'DLP: policy scan — 1,847 users active' },
   { level: 'ALERT', msg: 'Exfil attempt blocked: USB transfer on WKSTN-1042' },
-  { level: 'INFO',  msg: 'Teramind session review complete: timeline built' },
-  { level: 'WARN',  msg: 'Abnormal: credential harvest payload in email flagged' },
+  { level: 'INFO',  msg: 'UAM: session review complete — timeline built' },
+  { level: 'WARN',  msg: 'Email sec: credential harvest payload flagged' },
   { level: 'CRIT',  msg: 'Post-termination access — DMS Layer 1 triggered' },
-  { level: 'INFO',  msg: 'Absolute OS freeze applied: WKSTN-0891 locked' },
+  { level: 'INFO',  msg: 'Endpoint OS freeze applied: WKSTN-0891 locked' },
   { level: 'INFO',  msg: 'HRUM escalation: behavioral anomaly score 94/100' },
-  { level: 'ALERT', msg: 'Datadog monitor: 47 failed logins in 180 seconds' },
-  { level: 'INFO',  msg: 'DLP report generated via Claude — 0 corrections' },
-  { level: 'WARN',  msg: 'CrowdStrike: lateral movement detected WKSTN-0023' },
-  { level: 'INFO',  msg: 'Torq automation: HRUM updated — 12 users processed' },
-  { level: 'INFO',  msg: 'Google Vault export: legal hold request fulfilled' },
+  { level: 'ALERT', msg: 'SIEM monitor: 47 failed logins in 180 seconds' },
+  { level: 'INFO',  msg: 'DLP report generated via AI agent — 0 corrections' },
+  { level: 'WARN',  msg: 'EDR: lateral movement detected WKSTN-0023' },
+  { level: 'INFO',  msg: 'SOAR automation: HRUM updated — 12 users processed' },
+  { level: 'INFO',  msg: 'Vault export: legal hold request fulfilled' },
   { level: 'ALERT', msg: '80,000+ GB stale data queued for auto-deletion' },
-  { level: 'INFO',  msg: 'CyberArk audit: 3 privileged sessions reviewed' },
-  { level: 'INFO',  msg: 'JumpCloud heartbeat: 4,500 devices checked in' },
+  { level: 'INFO',  msg: 'PAM audit: 3 privileged sessions reviewed' },
+  { level: 'INFO',  msg: 'MDM heartbeat: 4,500 devices checked in' },
   { level: 'CRIT',  msg: 'P0-critical incident declared — commander engaged' },
-  { level: 'INFO',  msg: 'NinjaOne: cached credentials cleared — 23 endpoints' },
-  { level: 'WARN',  msg: 'ServiceNow: DMS false-positive recovery initiated' },
-  { level: 'INFO',  msg: 'Datadog reference table updated via Torq SOAR' },
+  { level: 'INFO',  msg: 'RMM: cached credentials cleared — 23 endpoints' },
+  { level: 'WARN',  msg: 'ITSM: DMS false-positive recovery initiated' },
+  { level: 'INFO',  msg: 'SIEM reference table updated via SOAR' },
   { level: 'INFO',  msg: 'PowerShell: stale data deletion script executed' },
 ];
 

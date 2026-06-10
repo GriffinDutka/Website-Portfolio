@@ -14,7 +14,7 @@ const STAGES = [
   {
     label: 'ALERT INGEST',
     lines: [
-      { lvl: 'ALERT', msg: 'cyberhaven.sensor — exfil signature matched' },
+      { lvl: 'ALERT', msg: 'dlp.sensor — exfil signature matched' },
       { lvl: 'INFO',  msg: 'incident DLP-2026-0609 opened · severity: HIGH' },
       { lvl: 'INFO',  msg: 'payload: 412 files → personal cloud drive' },
     ],
@@ -30,7 +30,7 @@ const STAGES = [
   {
     label: 'ACTIVITY REVIEW',
     lines: [
-      { lvl: 'AGENT', msg: 'agent.overwatch — pulling 24h user activity via Teramind footage' },
+      { lvl: 'AGENT', msg: 'agent.overwatch — pulling 24h user activity via UAM footage' },
       { lvl: 'WARN',  msg: '3 anomalous sessions · USB + personal gmail flagged' },
       { lvl: 'AGENT', msg: 'evidence package compiled → 14 artifacts' },
     ],
@@ -38,7 +38,7 @@ const STAGES = [
   {
     label: 'LOG & TIMELINE',
     lines: [
-      { lvl: 'AGENT', msg: 'agent.sift — querying Datadog auth + endpoint logs' },
+      { lvl: 'AGENT', msg: 'agent.sift — querying SIEM auth + endpoint logs' },
       { lvl: 'AGENT', msg: 'emails + footage + log data → timeline agent' },
       { lvl: 'INFO',  msg: 'full timeline report built · intent confirmed @ 13:58' },
     ],

@@ -4,11 +4,10 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-import { prepareSkillsGraph, startSkillsDraw } from './skills.js?v=2';
 import { initMorphParticles } from './particles.js?v=4';
 import { initSceneObjects, tickSceneObjects } from './scene-objects.js?v=2';
-import { initParallax, tickParallax, initGlitchLabels, initHeroNameGlitch, initCursor, initScrollProgress, initHeroTerminal } from './effects.js?v=3';
-import { initAgentOps } from './agents.js?v=3';
+import { initParallax, tickParallax, initGlitchLabels, initHeroNameGlitch, initCursor, initScrollProgress, initHeroTerminal } from './effects.js?v=4';
+import { initAgentOps } from './agents.js?v=4';
 
 const gsap         = window.gsap;
 const ScrollTrigger = window.ScrollTrigger;
@@ -185,8 +184,7 @@ const WAYPOINTS = [
   { id: 'experience', z: 37,  x:  5,  y: -2,  rx: -0.022, ry:  0.055, color: 0xf59e0b, shape: 'padlock' },
   { id: 'stats',      z: 30,  x: -3,  y:  0,  rx:  0.008, ry: -0.030, color: 0x22c55e, shape: 'field'   },
   { id: 'agents',     z: 26,  x:  4,  y: -1,  rx: -0.012, ry:  0.040, color: 0xef4444, shape: 'network' },
-  { id: 'skills',     z: 22,  x:  4,  y:  2,  rx:  0.012, ry:  0.045, color: 0xa78bfa, shape: 'rings'   },
-  { id: 'education',  z: 17,  x: -2,  y: -1,  rx: -0.010, ry: -0.020, color: 0x00d4ff, shape: 'shield'  },
+  { id: 'education',  z: 18,  x: -2,  y: -1,  rx: -0.010, ry: -0.020, color: 0x00d4ff, shape: 'shield'  },
   { id: 'about',      z: 14,  x:  3,  y:  1,  rx:  0.010, ry:  0.030, color: 0x22c55e, shape: 'field'   },
   { id: 'contact',    z: 12,  x:  0,  y:  0,  rx:  0.000, ry:  0.000, color: null,     shape: 'globe'   },
 ];
@@ -547,15 +545,3 @@ const countObserver = new IntersectionObserver(entries => {
 
 document.querySelectorAll('.stat-card').forEach(el => countObserver.observe(el));
 
-// ── SKILLS GRAPH ──────────────────────────────────────────────────────────────
-// Force layout runs at startup (async, after loader) so it never blocks scroll.
-// Drawing starts only when the section becomes visible.
-setTimeout(prepareSkillsGraph, 0);
-
-const _skillsObserver = new IntersectionObserver(entries => {
-  if (entries[0].isIntersecting) {
-    _skillsObserver.disconnect();
-    startSkillsDraw();
-  }
-}, { threshold: 0.2 });
-_skillsObserver.observe(document.getElementById('skills'));
