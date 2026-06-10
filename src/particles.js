@@ -267,9 +267,9 @@ function shapeShield(n) {
 
 function shapeGlobe(n) {
   const pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
-  // Deep placement — the camera flight ends at z=12, so the globe must sit
-  // well behind the content instead of swallowing the camera
-  const CZ = -34, R = 15;
+  // The camera flight ends at z=12; keep the globe's front face beyond the
+  // near-fade distance so it reads big and bright without swallowing the camera
+  const CZ = -30, R = 18;
 
   const i1 = Math.floor(n * 0.46), i2 = Math.floor(n * 0.72), i3 = Math.floor(n * 0.86);
   for (let i = 0; i < i1; i++) {

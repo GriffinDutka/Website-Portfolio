@@ -5,7 +5,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { prepareSkillsGraph, startSkillsDraw } from './skills.js?v=2';
-import { initMorphParticles } from './particles.js?v=2';
+import { initMorphParticles } from './particles.js?v=3';
 import { initSceneObjects, tickSceneObjects } from './scene-objects.js?v=2';
 import { initParallax, tickParallax, initGlitchLabels, initHeroNameGlitch, initCursor, initScrollProgress, initHeroTerminal } from './effects.js?v=3';
 import { initAgentOps } from './agents.js?v=3';
