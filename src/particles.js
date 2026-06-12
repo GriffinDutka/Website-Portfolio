@@ -73,40 +73,6 @@ function shapeBurst(n) {
   return { pos, col, wobble: 1.3, struct: 0.0, boost: 1.0 };
 }
 
-function shapeName(n) {
-  const pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
-
-  // Sample lit pixels from hidden canvas text (same trick as the old hero.js)
-  const cv = document.createElement('canvas');
-  cv.width = 900; cv.height = 260;
-  const ctx = cv.getContext('2d');
-  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 900, 260);
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 130px "Helvetica Neue", Arial, sans-serif';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('GRIFFIN', 450, 72);
-  ctx.fillText('DUTKA',   450, 188);
-  const data = ctx.getImageData(0, 0, 900, 260).data;
-
-  const px = [];
-  for (let y = 0; y < 260; y += 3) {
-    for (let x = 0; x < 900; x += 3) {
-      if (data[(y * 900 + x) * 4] > 128) {
-        px.push([((x / 900) - 0.5) * 78, -((y / 260) - 0.5) * 24]);
-      }
-    }
-  }
-
-  const letterCount = Math.floor(n * 0.72);
-  for (let i = 0; i < letterCount; i++) {
-    const p = px[i % px.length];
-    setV3(pos, i, p[0] + gauss(0.35), p[1] + gauss(0.35), gauss(1.6));
-    const r = Math.random();
-    setCol(col, i, r < 0.08 ? WHITE : CYAN, r < 0.08 ? 0.9 : 0.55 + Math.random() * 0.3);
-  }
-  ambientTail(pos, col, n, letterCount);
-  return { pos, col, wobble: 0.05, struct: 1.0, boost: 1.25 };
-}
 
 function shapePadlock(n) {
   const pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
@@ -318,7 +284,6 @@ function shapeGlobe(n) {
 const GENERATORS = {
   field:   shapeField,
   burst:   shapeBurst,
-  name:    shapeName,
   padlock: shapePadlock,
   network: shapeNetwork,
   rings:   shapeRings,
@@ -333,14 +298,14 @@ export function initMorphParticles(scene, isMobile) {
   const cache = {};
   const getShape = (name) => (cache[name] ??= GENERATORS[name](COUNT));
 
-  const burst = getShape('burst');
-  const name0 = getShape('name');
+  const burst  = getShape('burst');
+  const field0 = getShape('field');
 
   const geo = new THREE.BufferGeometry();
   const posA = new Float32Array(burst.pos);
-  const posB = new Float32Array(name0.pos);
+  const posB = new Float32Array(field0.pos);
   const colA = new Float32Array(burst.col);
-  const colB = new Float32Array(name0.col);
+  const colB = new Float32Array(field0.col);
   const sizes = new Float32Array(COUNT);
   const rands = new Float32Array(COUNT);
   for (let i = 0; i < COUNT; i++) {
@@ -360,9 +325,9 @@ export function initMorphParticles(scene, isMobile) {
     uTime:          { value: 0 },
     uRotX:          { value: 0 },
     uRotY:          { value: 0 },
-    uWobbleA:       { value: burst.wobble }, uWobbleB: { value: name0.wobble },
-    uStructA:       { value: burst.struct }, uStructB: { value: name0.struct },
-    uBoostA:        { value: burst.boost },  uBoostB:  { value: name0.boost },
+    uWobbleA:       { value: burst.wobble }, uWobbleB: { value: field0.wobble },
+    uStructA:       { value: burst.struct }, uStructB: { value: field0.struct },
+    uBoostA:        { value: burst.boost },  uBoostB:  { value: field0.boost },
     uColorShift:    { value: new THREE.Color(0x000000) },
     uShiftStrength: { value: 0.0 },
   };
@@ -439,7 +404,7 @@ export function initMorphParticles(scene, isMobile) {
   mesh.frustumCulled = false;
   scene.add(mesh);
 
-  let currentShape = 'name'; // slot B at startup
+  let currentShape = 'field'; // slot B at startup
 
   // Bake the on-screen blend into slot A (replicating the shader's per-particle
   // stagger) so a new morph can start from exactly what's visible — even when
@@ -487,17 +452,11 @@ export function initMorphParticles(scene, isMobile) {
     gsap.to(uniforms.uMix, { value: 1, duration, ease: 'power2.inOut' });
   }
 
-  // Intro: burst → "GRIFFIN DUTKA" → hold → dissolve to field
+  // Intro: distant burst settles calmly into the drift field; the DOM hero
+  // text reveals while the particles are still gliding in
   function intro(onReveal) {
-    gsap.to(uniforms.uMix, {
-      value: 1, duration: 2.1, ease: 'power3.inOut',
-      onComplete: () => {
-        gsap.delayedCall(0.75, () => {
-          onReveal();
-          setShape('field', 2.0);
-        });
-      },
-    });
+    gsap.to(uniforms.uMix, { value: 1, duration: 2.4, ease: 'power2.out' });
+    gsap.delayedCall(0.9, onReveal);
   }
 
   const rot = { x: 0, y: 0 }; // scroll-driven rotation proxy (tweened by main)
