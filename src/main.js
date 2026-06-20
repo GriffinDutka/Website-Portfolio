@@ -47,6 +47,44 @@ if (!IS_MOBILE && !PREFERS_REDUCED && window.Lenis) {
       lenis.scrollTo(target, { duration: 1.6 });
     });
   });
+
+  // ── PROXIMITY SECTION SNAP ──────────────────────────────────────────────────
+  // Borealis-style "rest at each part," tuned gentle for a portfolio: once
+  // scrolling fully settles (no scroll events for a beat), if the viewport top
+  // landed *near* a section boundary we ease onto it. If you deliberately stop
+  // mid-section to read, you're far from any boundary, so nothing yanks you.
+  // The pinned Agent Ops scrub stays free for the same reason — its interior is
+  // far from any section top. Crank SNAP_THRESHOLD toward ~0.5 for a crisper,
+  // closer-to-mandatory lock.
+  const SNAP_THRESHOLD = 0.18;  // snap only within this fraction of a viewport of a section top
+  const SETTLE_DELAY   = 150;   // ms of scroll silence before we consider it settled
+  let snapTimer = null;
+  let snapping  = false;
+
+  function trySnap() {
+    if (snapping) return;
+    const y  = lenis.scroll;
+    const vh = window.innerHeight;
+    let best = null, bestDist = Infinity;
+    document.querySelectorAll('.section').forEach(s => {
+      const top = s.getBoundingClientRect().top + y;   // live: respects pin spacers
+      const d   = Math.abs(top - y);
+      if (d < bestDist) { bestDist = d; best = top; }
+    });
+    if (best == null || bestDist <= 2 || bestDist > vh * SNAP_THRESHOLD) return;
+    snapping = true;
+    lenis.scrollTo(best, {
+      duration: 0.8,
+      easing: t => 1 - Math.pow(1 - t, 3),
+      onComplete: () => { snapping = false; },
+    });
+  }
+
+  lenis.on('scroll', () => {
+    if (snapping) return;
+    clearTimeout(snapTimer);
+    snapTimer = setTimeout(trySnap, SETTLE_DELAY);
+  });
 }
 
 // ── LOADER ───────────────────────────────────────────────────────────────────
