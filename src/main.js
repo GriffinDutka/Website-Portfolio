@@ -48,33 +48,37 @@ if (!IS_MOBILE && !PREFERS_REDUCED && window.Lenis) {
     });
   });
 
-  // ── PROXIMITY SECTION SNAP ──────────────────────────────────────────────────
-  // Borealis-style "rest at each part," tuned gentle for a portfolio: once
-  // scrolling fully settles (no scroll events for a beat), if the viewport top
-  // landed *near* a section boundary we ease onto it. If you deliberately stop
-  // mid-section to read, you're far from any boundary, so nothing yanks you.
-  // The pinned Agent Ops scrub stays free for the same reason — its interior is
-  // far from any section top. Crank SNAP_THRESHOLD toward ~0.5 for a crisper,
-  // closer-to-mandatory lock.
-  const SNAP_THRESHOLD = 0.18;  // snap only within this fraction of a viewport of a section top
-  const SETTLE_DELAY   = 150;   // ms of scroll silence before we consider it settled
+  // ── MANDATORY SECTION SNAP ───────────────────────────────────────────────────
+  // Hard-stop borealis style: scroll always ends on a section boundary, never
+  // mid-page. Exception: the Agent Ops scrub interior is left free so the
+  // pinned ScrollTrigger animation can be scrubbed without fighting the snap.
+  const SETTLE_DELAY = 150;  // ms of scroll silence before locking to nearest section
   let snapTimer = null;
   let snapping  = false;
 
   function trySnap() {
     if (snapping) return;
-    const y  = lenis.scroll;
-    const vh = window.innerHeight;
+    const y = lenis.scroll;
+
+    // Skip the interior of the pinned scrub so it stays scrubbable.
+    const agentsEl = document.getElementById('agents');
+    const eduEl    = document.getElementById('education');
+    if (agentsEl && eduEl) {
+      const agentsTop = Math.round(agentsEl.getBoundingClientRect().top + y);
+      const eduTop    = Math.round(eduEl.getBoundingClientRect().top + y);
+      if (y > agentsTop + 60 && y < eduTop - 60) return;
+    }
+
     let best = null, bestDist = Infinity;
     document.querySelectorAll('.section').forEach(s => {
-      const top = s.getBoundingClientRect().top + y;   // live: respects pin spacers
+      const top = Math.round(s.getBoundingClientRect().top + y);
       const d   = Math.abs(top - y);
       if (d < bestDist) { bestDist = d; best = top; }
     });
-    if (best == null || bestDist <= 2 || bestDist > vh * SNAP_THRESHOLD) return;
+    if (best == null || bestDist <= 2) return;
     snapping = true;
     lenis.scrollTo(best, {
-      duration: 0.8,
+      duration: 0.75,
       easing: t => 1 - Math.pow(1 - t, 3),
       onComplete: () => { snapping = false; },
     });
