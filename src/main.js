@@ -48,19 +48,27 @@ if (!IS_MOBILE && !PREFERS_REDUCED && window.Lenis) {
     });
   });
 
-  // ── MANDATORY SECTION SNAP ───────────────────────────────────────────────────
-  // Hard-stop borealis style: scroll always ends on a section boundary, never
-  // mid-page. Exception: the Agent Ops scrub interior is left free so the
-  // pinned ScrollTrigger animation can be scrubbed without fighting the snap.
-  const SETTLE_DELAY = 150;  // ms of scroll silence before locking to nearest section
-  let snapTimer = null;
-  let snapping  = false;
+  // ── MANDATORY SECTION SNAP (wheel-intercept) ─────────────────────────────────
+  // Intercept every wheel event and redirect it to the next/prev section so the
+  // page never coasts freely between stops. Lenis animates the jump; we own the
+  // destination. The Agent Ops pinned scrub interior is exempt so ScrollTrigger
+  // can scrub that animation normally.
+  const SNAP_COOLDOWN = 900; // ms lock after each snap — absorbs trackpad momentum
+  let lastSnap   = 0;
+  let snapLocked = false;
 
-  function trySnap() {
-    if (snapping) return;
+  function sectionTops() {
+    const y = lenis.scroll;
+    return [...document.querySelectorAll('.section')].map(s => ({
+      id: s.id,
+      top: Math.round(s.getBoundingClientRect().top + y),
+    }));
+  }
+
+  window.addEventListener('wheel', e => {
     const y = lenis.scroll;
 
-    // Skip the interior of the pinned scrub so it stays scrubbable.
+    // Let the Agent Ops pinned scrub scroll freely.
     const agentsEl = document.getElementById('agents');
     const eduEl    = document.getElementById('education');
     if (agentsEl && eduEl) {
@@ -69,26 +77,31 @@ if (!IS_MOBILE && !PREFERS_REDUCED && window.Lenis) {
       if (y > agentsTop + 60 && y < eduTop - 60) return;
     }
 
-    let best = null, bestDist = Infinity;
-    document.querySelectorAll('.section').forEach(s => {
-      const top = Math.round(s.getBoundingClientRect().top + y);
-      const d   = Math.abs(top - y);
-      if (d < bestDist) { bestDist = d; best = top; }
-    });
-    if (best == null || bestDist <= 2) return;
-    snapping = true;
-    lenis.scrollTo(best, {
-      duration: 0.75,
-      easing: t => 1 - Math.pow(1 - t, 3),
-      onComplete: () => { snapping = false; },
-    });
-  }
+    // Block all wheel input while snapping or in cooldown.
+    const now = performance.now();
+    if (snapLocked || now - lastSnap < SNAP_COOLDOWN) { e.preventDefault(); return; }
 
-  lenis.on('scroll', () => {
-    if (snapping) return;
-    clearTimeout(snapTimer);
-    snapTimer = setTimeout(trySnap, SETTLE_DELAY);
-  });
+    const secs = sectionTops();
+    const dir  = e.deltaY > 0 ? 1 : -1;
+
+    // Find which section we're currently at (last one whose top ≤ scroll pos).
+    let idx = 0;
+    for (let i = secs.length - 1; i >= 0; i--) {
+      if (y >= secs[i].top - 10) { idx = i; break; }
+    }
+
+    const nextIdx = Math.max(0, Math.min(secs.length - 1, idx + dir));
+    if (Math.round(y) === secs[nextIdx].top) { e.preventDefault(); return; }
+
+    e.preventDefault();
+    lastSnap   = now;
+    snapLocked = true;
+    lenis.scrollTo(secs[nextIdx].top, {
+      duration: 0.9,
+      easing: t => 1 - Math.pow(1 - t, 3),
+      onComplete: () => { snapLocked = false; },
+    });
+  }, { passive: false });
 }
 
 // ── LOADER ───────────────────────────────────────────────────────────────────
