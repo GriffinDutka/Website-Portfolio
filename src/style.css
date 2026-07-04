@@ -517,7 +517,7 @@ a:hover { text-decoration: underline; }
 
 .agents-intro {
   font-size: 13px;
-  color: var(--text-mid);
+  color: var(--text);
   font-family: var(--font-sans);
   margin-bottom: 36px;
   max-width: 640px;
@@ -683,7 +683,7 @@ a:hover { text-decoration: underline; }
 
 .agent-terminal {
   border: 1px solid var(--border);
-  background: rgba(5, 10, 15, 0.88);
+  background: rgba(3, 7, 12, 0.97);
   backdrop-filter: blur(16px);
   border-radius: 4px;
   overflow: hidden;
@@ -734,7 +734,7 @@ a:hover { text-decoration: underline; }
 .alog-level.AGENT { color: #a78bfa; text-shadow: 0 0 8px rgba(167,139,250,0.4); }
 
 .alog-msg {
-  color: var(--text-mid);
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -743,7 +743,7 @@ a:hover { text-decoration: underline; }
 .agent-report {
   position: relative;
   border: 1px solid rgba(34, 197, 94, 0.35);
-  background: rgba(5, 15, 10, 0.9);
+  background: rgba(3, 10, 6, 0.97);
   backdrop-filter: blur(16px);
   border-radius: 4px;
   padding: 24px 22px;
@@ -782,7 +782,7 @@ a:hover { text-decoration: underline; }
 .report-id {
   font-size: 10px;
   letter-spacing: 1.5px;
-  color: var(--text-dim);
+  color: var(--text-mid);
 }
 
 .report-rows {
@@ -798,7 +798,7 @@ a:hover { text-decoration: underline; }
   letter-spacing: 1px;
 }
 
-.report-row span   { color: var(--text-dim); }
+.report-row span   { color: var(--text-mid); }
 .report-row strong { color: var(--text); font-weight: 700; }
 .report-ok         { color: var(--green) !important; }
 
@@ -823,8 +823,8 @@ a:hover { text-decoration: underline; }
 
 .agent-card {
   border: 1px solid rgba(167, 139, 250, 0.18);
-  background: var(--card-bg);
-  backdrop-filter: blur(12px);
+  background: rgba(4, 8, 16, 0.96);
+  backdrop-filter: blur(16px);
   border-radius: 4px;
   padding: 24px 22px;
   display: flex;
@@ -870,12 +870,12 @@ a:hover { text-decoration: underline; }
   font-family: var(--font-sans);
   font-size: 13px;
   line-height: 1.65;
-  color: var(--text-mid);
+  color: var(--text);
 }
 
 .agent-kv {
   font-size: 11px;
-  color: var(--text-mid);
+  color: var(--text);
   font-family: var(--font-sans);
 }
 
@@ -883,7 +883,7 @@ a:hover { text-decoration: underline; }
   font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 2px;
-  color: var(--text-dim);
+  color: var(--text-mid);
   display: inline-block;
   width: 64px;
 }
