@@ -702,10 +702,15 @@ a:hover { text-decoration: underline; }
   font-size: 9px;
   letter-spacing: 1px;
   color: var(--text-mid);
-  opacity: 0.9;
   white-space: nowrap;
   font-family: var(--font-sans);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.8);
+  padding: 4px 9px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 7px;
+  box-shadow: var(--glass-shadow);
 }
 
 /* — Terminal + report row — */
