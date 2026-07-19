@@ -12,7 +12,14 @@
   --text-mid:  #94a3b8;
   --border:    rgba(0, 212, 255, 0.15);
   --border-hi: rgba(0, 212, 255, 0.4);
-  --card-bg:   rgba(8, 15, 24, 0.85);
+  /* ── Liquid Glass (clear/translucent, Apple-style) ── */
+  --glass-bg:     rgba(5, 10, 17, 0.62);
+  --glass-blur:   blur(28px) saturate(200%);
+  --glass-radius: 20px;
+  --glass-border: rgba(255, 255, 255, 0.16);
+  /* soft lift + inset top sheen (the bright specular edge Apple uses) */
+  --glass-shadow: 0 10px 34px rgba(0, 0, 0, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  --card-bg:   var(--glass-bg);
   --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'Fira Code', 'Courier New', monospace;
   --font-sans: 'Inter', 'Helvetica Neue', Arial, sans-serif;
 }
@@ -147,55 +154,25 @@ a:hover { text-decoration: underline; }
   padding-bottom: 120px;
 }
 
-/* ── LIQUID GLASS PANEL (Apple iOS 26 style) ────────────────────────────────
-   ::before  = frosted glass body — blurs the Three.js canvas behind it
-   ::after   = specular highlight — the thin white sheen on top Apple uses    */
-.section-content::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.048) 0%,
-    rgba(8, 18, 34, 0.54)     12%,
-    rgba(5, 13, 26, 0.50)     75%,
-    rgba(0, 180, 220, 0.032) 100%
-  );
-  backdrop-filter: blur(32px) saturate(180%);
-  -webkit-backdrop-filter: blur(32px) saturate(180%);
-  border-top:    1px solid rgba(255, 255, 255, 0.11);
-  border-left:   1px solid rgba(255, 255, 255, 0.07);
-  border-right:  1px solid rgba(255, 255, 255, 0.04);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-}
+/* Big outer section panel removed — sections now float over the 3D scene as
+   a heading chip + content glass boxes only. */
 
-.section-content::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 8%;
-  right: 8%;
-  height: 1px;
-  z-index: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.32) 25%,
-    rgba(210, 240, 255, 0.55) 50%,
-    rgba(255, 255, 255, 0.32) 75%,
-    transparent 100%
-  );
-}
-
+/* ── SECTION HEADING — small liquid-glass chip ── */
 .section-label {
+  display: inline-block;
+  align-self: flex-start;      /* hug the text inside the flex column */
   font-size: 15px;
   letter-spacing: 4px;
   color: var(--cyan);
   text-transform: uppercase;
   margin-bottom: 40px;
-  opacity: 0.85;
+  padding: 10px 18px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow);
 }
 
 /* ── LOADER ── */
@@ -471,10 +448,13 @@ a:hover { text-decoration: underline; }
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 10px 14px;
-  background: rgba(239,68,68,0.05);
-  border: 1px solid rgba(239,68,68,0.2);
-  border-radius: 3px;
+  padding: 12px 16px;
+  background: rgba(30, 12, 14, 0.45);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  border: 1px solid rgba(239,68,68,0.28);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   opacity: 0;
   transform: translateX(-10px);
   transition: opacity 0.5s ease, transform 0.5s ease;
@@ -691,29 +671,41 @@ a:hover { text-decoration: underline; }
 }
 
 .agent-node-label {
-  margin-top: 66px;
+  margin-top: 60px;
   font-size: 10px;
   letter-spacing: 2px;
-  color: var(--text-dim);
+  color: var(--text);
   white-space: nowrap;
-  transition: color 0.35s, text-shadow 0.35s;
+  padding: 5px 11px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 9px;
+  box-shadow: var(--glass-shadow);
+  transition: color 0.35s, text-shadow 0.35s, border-color 0.35s;
 }
 
 .agent-node.active .agent-node-label {
   color: var(--cyan);
+  border-color: rgba(0, 212, 255, 0.4);
   text-shadow: 0 0 12px rgba(0, 212, 255, 0.6);
 }
 
-.agent-node.done .agent-node-label { color: var(--green); }
+.agent-node.done .agent-node-label {
+  color: var(--green);
+  border-color: rgba(34, 197, 94, 0.4);
+}
 
 .agent-node-sub {
-  margin-top: 5px;
+  margin-top: 7px;
   font-size: 9px;
   letter-spacing: 1px;
-  color: var(--text-dim);
-  opacity: 0.55;
+  color: var(--text-mid);
+  opacity: 0.9;
   white-space: nowrap;
   font-family: var(--font-sans);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.8);
 }
 
 /* — Terminal + report row — */
@@ -725,10 +717,12 @@ a:hover { text-decoration: underline; }
 }
 
 .agent-terminal {
-  border: 1px solid var(--border);
-  background: rgba(3, 7, 12, 0.97);
-  backdrop-filter: blur(16px);
-  border-radius: 4px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
   overflow: hidden;
 }
 
@@ -785,10 +779,12 @@ a:hover { text-decoration: underline; }
 /* — Report artifact — */
 .agent-report {
   position: relative;
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  background: rgba(3, 10, 6, 0.97);
-  backdrop-filter: blur(16px);
-  border-radius: 4px;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
   padding: 24px 22px;
   display: flex;
   flex-direction: column;
@@ -804,13 +800,8 @@ a:hover { text-decoration: underline; }
   box-shadow: 0 0 40px rgba(34, 197, 94, 0.12);
 }
 
-.report-corner {
-  position: absolute;
-  width: 10px; height: 10px;
-  border-color: rgba(34,197,94,0.7);
-  border-style: solid;
-  border-width: 0;
-}
+/* Corner reticle brackets retired — they clashed with the rounded glass card. */
+.report-corner { display: none; }
 .report-corner.tl { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; }
 .report-corner.tr { top: -1px; right: -1px; border-top-width: 2px; border-right-width: 2px; }
 .report-corner.bl { bottom: -1px; left: -1px; border-bottom-width: 2px; border-left-width: 2px; }
@@ -1417,10 +1408,12 @@ a:hover { text-decoration: underline; }
   top: 50%;
   transform: translateY(-50%);
   width: 340px;
-  border: 1px solid var(--border);
-  background: rgba(5,10,15,0.88);
-  backdrop-filter: blur(16px);
-  border-radius: 4px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
   font-family: var(--font-mono);
   overflow: hidden;
   opacity: 0;
@@ -1434,8 +1427,8 @@ a:hover { text-decoration: underline; }
   align-items: center;
   gap: 10px;
   padding: 8px 14px;
-  border-bottom: 1px solid var(--border);
-  background: rgba(0,0,0,0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: transparent;
 }
 
 .t-dots { display: flex; gap: 6px; align-items: center; }
@@ -1734,4 +1727,23 @@ a:hover { text-decoration: underline; }
   .scroll-hint {
     left: 18px;
   }
+}
+
+/* ── LIQUID GLASS — reading surfaces ──────────────────────────────────────────
+   One master rule so every reading box shares the same clear/translucent glass:
+   heavy blur + saturation, big rounded corners, bright top sheen, soft lift.
+   Placed last so it wins over each box's original flat-card styling.          */
+.case-card,
+.stat-card,
+.node-tooltip,
+.edu-card,
+.compliance-strip,
+.resume-menu,
+.about-portrait {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
 }
